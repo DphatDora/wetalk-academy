@@ -15,21 +15,21 @@ const (
 )
 
 func main() {
-	setUpInfrastructure()
-	defer closeInfrastructure()
-}
-
-func setUpInfrastructure() {
 	time.Local = time.UTC
 
 	conf := config.GetConfig()
 	fmt.Println("[DEBUG] Config:", conf)
 
 	// init MongoDB
-	db.InitMongoDB(&conf)
+	mongoDB := db.NewMongoDB(&conf)
+	defer func() {
+		if err := mongoDB.Close(); err != nil {
+			log.Printf("[ERROR] Failed to close MongoDB: %v", err)
+		}
+	}()
 
 	// set up routes
-	r := router.SetupRoutes(db.GetDB(), &conf)
+	r := router.SetupRoutes(mongoDB.Database, &conf)
 
 	port := conf.App.Port
 	if port == 0 {
@@ -38,10 +38,4 @@ func setUpInfrastructure() {
 
 	log.Printf("[Server] Starting on PORT %d", port)
 	r.Run(":" + strconv.Itoa(port))
-}
-
-func closeInfrastructure() {
-	if err := db.CloseMongoDB(); err != nil {
-		log.Printf("[ERROR] Close MongoDB fail: %s\n", err)
-	}
 }

@@ -12,45 +12,34 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 )
 
-var (
-	mongoClient   *mongo.Client
-	mongoDatabase *mongo.Database
-)
+type MongoDB struct {
+	client   *mongo.Client
+	Database *mongo.Database
+}
 
-func InitMongoDB(conf *config.Config) {
-	uri := conf.Database.URI
-	dbName := conf.Database.Name
-
+func NewMongoDB(conf *config.Config) *MongoDB {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(options.Client().ApplyURI(conf.Database.URI))
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %s", err)
+		log.Fatalf("[❌] Failed to connect to MongoDB: %v", err)
 	}
 
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		log.Fatalf("Failed to ping MongoDB: %s", err)
+		log.Fatalf("[❌] Failed to ping MongoDB: %v", err)
 	}
 
-	fmt.Println("[✅] Connect to MongoDB successfully")
+	fmt.Println("[✅] Connected to MongoDB successfully")
 
-	mongoClient = client
-	mongoDatabase = client.Database(dbName)
+	return &MongoDB{
+		client:   client,
+		Database: client.Database(conf.Database.Name),
+	}
 }
 
-func GetDB() *mongo.Database {
-	if mongoDatabase == nil {
-		panic("[❌] Connection to MongoDB is not setup")
-	}
-	return mongoDatabase
-}
-
-func CloseMongoDB() error {
-	if mongoClient == nil {
-		return nil
-	}
+func (m *MongoDB) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	return mongoClient.Disconnect(ctx)
+	return m.client.Disconnect(ctx)
 }

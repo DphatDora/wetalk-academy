@@ -3,6 +3,7 @@ package router
 import (
 	"wetalk-academy/config"
 	repository "wetalk-academy/internal/infrastructure/db/repository"
+	"wetalk-academy/internal/infrastructure/judge0"
 	"wetalk-academy/internal/interface/handler"
 	"wetalk-academy/internal/interface/middleware"
 	"wetalk-academy/internal/service"
@@ -14,6 +15,7 @@ import (
 type AppHandler struct {
 	topicHandler  *handler.TopicHandler
 	lessonHandler *handler.LessonHandler
+	judge0Handler *handler.Judge0Handler
 }
 
 func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
@@ -24,14 +26,19 @@ func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 	topicRepo := repository.NewTopicRepository(mongoDB)
 	lessonRepo := repository.NewLessonRepository(mongoDB)
 
+	// clients
+	judge0Client := judge0.NewClient(conf)
+
 	// services
 	topicService := service.NewTopicService(topicRepo, lessonRepo)
 	lessonService := service.NewLessonService(lessonRepo, topicRepo)
+	judge0Service := service.NewJudge0Service(judge0Client)
 
 	// handlers
 	appHandler := &AppHandler{
 		topicHandler:  handler.NewTopicHandler(topicService),
 		lessonHandler: handler.NewLessonHandler(lessonService),
+		judge0Handler: handler.NewJudge0Handler(judge0Service),
 	}
 
 	api := router.Group("/api/v1")
@@ -58,6 +65,11 @@ func setupPublicRoutes(rg *gin.RouterGroup, appHandler *AppHandler) {
 	lessons := rg.Group("/lessons")
 	{
 		lessons.GET("/:slug", appHandler.lessonHandler.GetLessonBySlug)
+	}
+
+	judge0 := rg.Group("/judge0")
+	{
+		judge0.POST("/submit", appHandler.judge0Handler.SubmitCode)
 	}
 }
 
