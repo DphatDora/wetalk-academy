@@ -13,9 +13,10 @@ import (
 )
 
 type AppHandler struct {
-	topicHandler  *handler.TopicHandler
-	lessonHandler *handler.LessonHandler
-	judge0Handler *handler.Judge0Handler
+	topicHandler   *handler.TopicHandler
+	lessonHandler  *handler.LessonHandler
+	contentHandler *handler.ContentHandler
+	judge0Handler  *handler.Judge0Handler
 }
 
 func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
@@ -25,20 +26,23 @@ func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 	// repositories
 	topicRepo := repository.NewTopicRepository(mongoDB)
 	lessonRepo := repository.NewLessonRepository(mongoDB)
+	contentRepo := repository.NewContentRepository(mongoDB)
 
 	// clients
 	judge0Client := judge0.NewClient(conf)
 
 	// services
 	topicService := service.NewTopicService(topicRepo, lessonRepo)
-	lessonService := service.NewLessonService(lessonRepo, topicRepo)
+	lessonService := service.NewLessonService(lessonRepo, topicRepo, contentRepo)
+	contentService := service.NewContentService(contentRepo, lessonRepo, topicRepo)
 	judge0Service := service.NewJudge0Service(judge0Client)
 
 	// handlers
 	appHandler := &AppHandler{
-		topicHandler:  handler.NewTopicHandler(topicService),
-		lessonHandler: handler.NewLessonHandler(lessonService),
-		judge0Handler: handler.NewJudge0Handler(judge0Service),
+		topicHandler:   handler.NewTopicHandler(topicService),
+		lessonHandler:  handler.NewLessonHandler(lessonService),
+		contentHandler: handler.NewContentHandler(contentService),
+		judge0Handler:  handler.NewJudge0Handler(judge0Service),
 	}
 
 	api := router.Group("/api/v1")
@@ -65,6 +69,7 @@ func setupPublicRoutes(rg *gin.RouterGroup, appHandler *AppHandler) {
 	lessons := rg.Group("/lessons")
 	{
 		lessons.GET("/:slug", appHandler.lessonHandler.GetLessonBySlug)
+		lessons.GET("/:slug/content", appHandler.contentHandler.GetContent)
 	}
 
 	judge0 := rg.Group("/judge0")
@@ -89,6 +94,10 @@ func setupProtectedRoutes(rg *gin.RouterGroup, conf *config.Config, appHandler *
 			lessons.POST("", appHandler.lessonHandler.CreateLesson)
 			lessons.PUT("/:slug", appHandler.lessonHandler.UpdateLesson)
 			lessons.DELETE("/:slug", appHandler.lessonHandler.DeleteLesson)
+
+			lessons.POST("/:slug/content", appHandler.contentHandler.CreateContent)
+			lessons.PUT("/:slug/content", appHandler.contentHandler.UpdateContent)
+			lessons.DELETE("/:slug/content", appHandler.contentHandler.DeleteContent)
 		}
 	}
 }

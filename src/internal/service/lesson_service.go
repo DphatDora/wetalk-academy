@@ -15,14 +15,16 @@ import (
 )
 
 type LessonService struct {
-	lessonRepo repository.LessonRepository
-	topicRepo  repository.TopicRepository
+	lessonRepo  repository.LessonRepository
+	topicRepo   repository.TopicRepository
+	contentRepo repository.ContentRepository
 }
 
-func NewLessonService(lessonRepo repository.LessonRepository, topicRepo repository.TopicRepository) *LessonService {
+func NewLessonService(lessonRepo repository.LessonRepository, topicRepo repository.TopicRepository, contentRepo repository.ContentRepository) *LessonService {
 	return &LessonService{
-		lessonRepo: lessonRepo,
-		topicRepo:  topicRepo,
+		lessonRepo:  lessonRepo,
+		topicRepo:   topicRepo,
+		contentRepo: contentRepo,
 	}
 }
 
@@ -129,6 +131,21 @@ func (s *LessonService) DeleteLesson(ctx context.Context, slug string, userId ui
 
 	if topic.Author.UserID != userId {
 		return fmt.Errorf("unauthorized: user does not own this topic")
+	}
+
+	// Delete associated content if exists
+	lessonID := existingLesson.ID.Hex()
+	contentExists, err := s.contentRepo.ContentExistsByLessonID(ctx, lessonID)
+	if err != nil {
+		log.Printf("[Err] Error checking content existence in LessonService.DeleteLesson: %v", err)
+		return fmt.Errorf("failed to check content: %w", err)
+	}
+
+	if contentExists {
+		if err := s.contentRepo.DeleteContentByLessonID(ctx, lessonID); err != nil {
+			log.Printf("[Err] Error deleting content in LessonService.DeleteLesson: %v", err)
+			return fmt.Errorf("failed to delete content: %w", err)
+		}
 	}
 
 	if err := s.lessonRepo.DeleteLesson(ctx, slug); err != nil {
