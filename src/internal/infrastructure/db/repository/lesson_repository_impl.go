@@ -34,6 +34,21 @@ func (r *LessonRepositoryImpl) GetLessonBySlug(ctx context.Context, slug string)
 	return lesson, nil
 }
 
+func (r *LessonRepositoryImpl) GetLessonByID(ctx context.Context, id string) (*model.Lesson, error) {
+	objectID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var lesson *model.Lesson
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&lesson)
+	if err != nil {
+		return nil, err
+	}
+	return lesson, nil
+}
+
+
 func (r *LessonRepositoryImpl) GetLessonsByTopicID(ctx context.Context, topicID string, page, limit int) ([]*model.Lesson, int64, error) {
 	objectID, err := bson.ObjectIDFromHex(topicID)
 	if err != nil {

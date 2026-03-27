@@ -17,6 +17,7 @@ type AppHandler struct {
 	lessonHandler  *handler.LessonHandler
 	contentHandler *handler.ContentHandler
 	judge0Handler  *handler.Judge0Handler
+	quizHandler    *handler.QuizHandler
 }
 
 func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
@@ -27,6 +28,8 @@ func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 	topicRepo := repository.NewTopicRepository(mongoDB)
 	lessonRepo := repository.NewLessonRepository(mongoDB)
 	contentRepo := repository.NewContentRepository(mongoDB)
+	quizRepo := repository.NewQuizRepository(mongoDB)
+	quizSubmissionRepo := repository.NewQuizSubmissionRepository(mongoDB)
 
 	// clients
 	judge0Client := judge0.NewClient(conf)
@@ -36,6 +39,7 @@ func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 	lessonService := service.NewLessonService(lessonRepo, topicRepo, contentRepo)
 	contentService := service.NewContentService(contentRepo, lessonRepo, topicRepo)
 	judge0Service := service.NewJudge0Service(judge0Client)
+	quizService := service.NewQuizService(quizRepo, quizSubmissionRepo, lessonRepo, topicRepo)
 
 	// handlers
 	appHandler := &AppHandler{
@@ -43,6 +47,7 @@ func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 		lessonHandler:  handler.NewLessonHandler(lessonService),
 		contentHandler: handler.NewContentHandler(contentService),
 		judge0Handler:  handler.NewJudge0Handler(judge0Service),
+		quizHandler:    handler.NewQuizHandler(quizService),
 	}
 
 	api := router.Group("/api/v1")
@@ -70,6 +75,12 @@ func setupPublicRoutes(rg *gin.RouterGroup, appHandler *AppHandler) {
 	{
 		lessons.GET("/:slug", appHandler.lessonHandler.GetLessonBySlug)
 		lessons.GET("/:slug/content", appHandler.contentHandler.GetContent)
+		lessons.GET("/:slug/quiz", appHandler.quizHandler.GetQuizzesByLessonSlug)
+	}
+
+	quizzes := rg.Group("/quizzes")
+	{
+		quizzes.GET("/:id", appHandler.quizHandler.GetQuizByID)
 	}
 
 	judge0 := rg.Group("/judge0")
@@ -98,6 +109,14 @@ func setupProtectedRoutes(rg *gin.RouterGroup, conf *config.Config, appHandler *
 			lessons.POST("/:slug/content", appHandler.contentHandler.CreateContent)
 			lessons.PUT("/:slug/content", appHandler.contentHandler.UpdateContent)
 			lessons.DELETE("/:slug/content", appHandler.contentHandler.DeleteContent)
+		}
+
+		quizzes := protected.Group("/quizzes")
+		{
+			quizzes.POST("", appHandler.quizHandler.CreateQuiz)
+			quizzes.PUT("/:id", appHandler.quizHandler.UpdateQuiz)
+			quizzes.DELETE("/:id", appHandler.quizHandler.DeleteQuiz)
+			quizzes.POST("/submit", appHandler.quizHandler.SubmitQuiz)
 		}
 	}
 }

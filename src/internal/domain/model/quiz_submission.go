@@ -9,7 +9,7 @@ import (
 type QuizSubmission struct {
 	ID          bson.ObjectID `bson:"_id,omitempty"`
 	QuizID      bson.ObjectID `bson:"quiz_id"`
-	UserID      string        `bson:"user_id"`
+	UserID      uint64        `bson:"user_id"`
 	Answers     []string      `bson:"answers"`
 	TotalTime   int           `bson:"total_time"`
 	TotalScore  float64       `bson:"total_score"`
