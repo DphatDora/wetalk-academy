@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"wetalk-academy/package/logger"
 	"wetalk-academy/web/admin"
@@ -40,6 +42,7 @@ func GetAdminLogFiles(c *gin.Context) {
 //   - lines : max lines to return (default 200, max 2000)
 //   - search: optional search value
 //   - search_type: one of "user_id", "token", "ip" (default: "")
+//   - level: one of "DEBUG", "INFO", "WARN", "ERROR" (default: "")
 func GetAdminLogs(c *gin.Context) {
 	active := logger.LogFilePath()
 	if active == "" {
@@ -77,6 +80,7 @@ func GetAdminLogs(c *gin.Context) {
 
 	search := strings.TrimSpace(c.Query("search"))
 	searchType := strings.ToLower(strings.TrimSpace(c.Query("search_type")))
+	level := strings.ToUpper(strings.TrimSpace(c.Query("level")))
 
 	const maxRead = 2 * 1024 * 1024
 
@@ -94,8 +98,8 @@ func GetAdminLogs(c *gin.Context) {
 	}
 	reverseLines(lines)
 
-	if search != "" {
-		lines = filterLogLines(lines, searchType, search)
+	if search != "" || level != "" {
+		lines = filterLogLines(lines, searchType, search, level)
 		// Lines are already newest-first, keep only top N newest records.
 		if len(lines) > n {
 			lines = lines[:n]
@@ -107,6 +111,32 @@ func GetAdminLogs(c *gin.Context) {
 		"lines":       lines,
 		"search":      search,
 		"search_type": searchType,
+		"level":       level,
+	})
+}
+
+func GetAdminMetrics(c *gin.Context) {
+	var mem runtime.MemStats
+	runtime.ReadMemStats(&mem)
+
+	requestMetrics := logger.SnapshotRequestMetrics()
+
+	c.JSON(http.StatusOK, gin.H{
+		"time": time.Now().UTC().Format(time.RFC3339),
+		"system": gin.H{
+			"num_goroutine": runtime.NumGoroutine(),
+			"memory": gin.H{
+				"alloc_bytes":       mem.Alloc,
+				"total_alloc_bytes": mem.TotalAlloc,
+				"heap_alloc_bytes":  mem.HeapAlloc,
+				"heap_inuse_bytes":  mem.HeapInuse,
+				"heap_sys_bytes":    mem.HeapSys,
+				"stack_inuse_bytes": mem.StackInuse,
+				"stack_sys_bytes":   mem.StackSys,
+				"num_gc":            mem.NumGC,
+			},
+		},
+		"request": requestMetrics,
 	})
 }
 
@@ -119,20 +149,41 @@ func reverseLines(lines []string) {
 
 // filterLogLines filters log lines by search type. If searchType is empty or unknown,
 // it falls back to case-insensitive substring matching on raw JSON line.
-func filterLogLines(lines []string, searchType string, query string) []string {
+func filterLogLines(lines []string, searchType string, query string, level string) []string {
 	q := strings.TrimSpace(query)
-	if q == "" {
+	lv := strings.ToUpper(strings.TrimSpace(level))
+	if q == "" && lv == "" {
 		return lines
 	}
 	qLower := strings.ToLower(q)
 	qTokenHash := sha256Hex(q)
 	out := make([]string, 0, len(lines))
 	for _, l := range lines {
-		if matchLogLine(l, searchType, q, qLower, qTokenHash) {
+		if !matchLogLevel(l, lv) {
+			continue
+		}
+		if q == "" || matchLogLine(l, searchType, q, qLower, qTokenHash) {
 			out = append(out, l)
 		}
 	}
 	return out
+}
+
+func matchLogLevel(raw string, level string) bool {
+	if level == "" {
+		return true
+	}
+
+	var obj map[string]any
+	if err := json.Unmarshal([]byte(raw), &obj); err != nil {
+		return strings.Contains(strings.ToUpper(raw), `"LEVEL":"`+level+`"`)
+	}
+
+	v, ok := obj["level"]
+	if !ok {
+		return false
+	}
+	return strings.EqualFold(strings.TrimSpace(anyToString(v)), level)
 }
 
 func matchLogLine(raw string, searchType string, query string, queryLower string, queryTokenHash string) bool {

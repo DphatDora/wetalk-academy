@@ -2,5 +2,5 @@ package admin
 
 import _ "embed"
 
-//go:embed logs_dashboard.html
+//go:embed dashboard.html
 var LogsDashboardHTML []byte

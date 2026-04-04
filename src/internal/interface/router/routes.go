@@ -24,6 +24,7 @@ type AppHandler struct {
 func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 	router := gin.Default()
 	router.Use(middleware.CORSMiddleware(conf.App.Whitelist))
+	router.Use(middleware.RequestMetricsMiddleware())
 
 	// repositories
 	topicRepo := repository.NewTopicRepository(mongoDB)
@@ -66,6 +67,7 @@ func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 		apiAdmin.Use(middleware.LogDashboardAuth(conf))
 		apiAdmin.GET("/logs/files", handler.GetAdminLogFiles)
 		apiAdmin.GET("/logs", handler.GetAdminLogs)
+		apiAdmin.GET("/metrics", handler.GetAdminMetrics)
 	}
 
 	return router
