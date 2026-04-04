@@ -8,8 +8,8 @@ import (
 	"wetalk-academy/internal/interface/dto/response"
 	"wetalk-academy/internal/service"
 	"wetalk-academy/package/constant"
-	"wetalk-academy/package/util"
 	"wetalk-academy/package/logger"
+	"wetalk-academy/package/util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,7 +27,7 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		logger.Errorf("[Err] %s in TopicHandler.CreateTopic", err.Error())
+		logger.ErrorfWithCtx(ctx, "[Err] %s in TopicHandler.CreateTopic", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -37,7 +37,7 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
 
 	var req request.CreateTopicRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Errorf("[Err] Error binding JSON in TopicHandler.CreateTopic: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error binding JSON in TopicHandler.CreateTopic: %v", err)
 		c.JSON(http.StatusBadRequest, response.APIResponse{
 			Success: false,
 			Message: "Invalid request format: " + err.Error(),
@@ -47,7 +47,7 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
 
 	err = h.topicService.CreateTopic(ctx, userID, &req)
 	if err != nil {
-		logger.Errorf("[Err] Error in service layer TopicHandler.CreateTopic: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error in service layer TopicHandler.CreateTopic: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to create topic",
@@ -55,6 +55,7 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
 		return
 	}
 
+	logger.InfofWithCtx(ctx, "[Info] Topic created successfully")
 	c.JSON(http.StatusCreated, response.APIResponse{
 		Success: true,
 		Message: "Topic created successfully",
@@ -76,7 +77,7 @@ func (h *TopicHandler) GetTopics(c *gin.Context) {
 
 	topics, total, err := h.topicService.GetTopics(ctx, page, limit)
 	if err != nil {
-		logger.Errorf("[Err] Error in service layer TopicHandler.GetTopics: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error in service layer TopicHandler.GetTopics: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to get topics",
@@ -84,6 +85,7 @@ func (h *TopicHandler) GetTopics(c *gin.Context) {
 		return
 	}
 
+	logger.InfofWithCtx(ctx, "[Info] Topics retrieved successfully")
 	c.JSON(http.StatusOK, response.APIResponse{
 		Success: true,
 		Message: "Topics retrieved successfully",
@@ -111,7 +113,7 @@ func (h *TopicHandler) GetTopicBySlug(c *gin.Context) {
 			return
 		}
 
-		logger.Errorf("[Err] Error in service layer TopicHandler.GetTopicBySlug: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error in service layer TopicHandler.GetTopicBySlug: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to get topic",
@@ -119,6 +121,7 @@ func (h *TopicHandler) GetTopicBySlug(c *gin.Context) {
 		return
 	}
 
+	logger.InfofWithCtx(ctx, "[Info] Topic retrieved successfully by slug")
 	c.JSON(http.StatusOK, response.APIResponse{
 		Success: true,
 		Message: "Topic retrieved successfully",
@@ -132,7 +135,7 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		logger.Errorf("[Err] %s in TopicHandler.UpdateTopic", err.Error())
+		logger.ErrorfWithCtx(ctx, "[Err] %s in TopicHandler.UpdateTopic", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -142,7 +145,7 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
 
 	var req request.UpdateTopicRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Errorf("[Err] Error binding JSON in TopicHandler.UpdateTopic: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error binding JSON in TopicHandler.UpdateTopic: %v", err)
 		c.JSON(http.StatusBadRequest, response.APIResponse{
 			Success: false,
 			Message: "Invalid request format: " + err.Error(),
@@ -167,7 +170,7 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
 			return
 		}
 
-		logger.Errorf("[Err] Error in service layer TopicHandler.UpdateTopic: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error in service layer TopicHandler.UpdateTopic: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to update topic",
@@ -175,6 +178,7 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
 		return
 	}
 
+	logger.InfofWithCtx(ctx, "[Info] Topic updated successfully")
 	c.JSON(http.StatusOK, response.APIResponse{
 		Success: true,
 		Message: "Topic updated successfully",
@@ -187,7 +191,7 @@ func (h *TopicHandler) DeleteTopic(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		logger.Errorf("[Err] %s in TopicHandler.DeleteTopic", err.Error())
+		logger.ErrorfWithCtx(ctx, "[Err] %s in TopicHandler.DeleteTopic", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -219,7 +223,7 @@ func (h *TopicHandler) DeleteTopic(c *gin.Context) {
 			return
 		}
 
-		logger.Errorf("[Err] Error in service layer TopicHandler.DeleteTopic: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error in service layer TopicHandler.DeleteTopic: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to delete topic",
@@ -227,6 +231,7 @@ func (h *TopicHandler) DeleteTopic(c *gin.Context) {
 		return
 	}
 
+	logger.InfofWithCtx(ctx, "[Info] Topic deleted successfully")
 	c.JSON(http.StatusOK, response.APIResponse{
 		Success: true,
 		Message: "Topic deleted successfully",
@@ -257,7 +262,7 @@ func (h *TopicHandler) GetLessonsInTopic(c *gin.Context) {
 			return
 		}
 
-		logger.Errorf("[Err] Error in service layer TopicHandler.GetLessonsInTopic: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error in service layer TopicHandler.GetLessonsInTopic: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to get lessons",
@@ -265,6 +270,7 @@ func (h *TopicHandler) GetLessonsInTopic(c *gin.Context) {
 		return
 	}
 
+	logger.InfofWithCtx(ctx, "[Info] Lessons in topic retrieved successfully")
 	c.JSON(http.StatusOK, response.APIResponse{
 		Success: true,
 		Message: "Lessons retrieved successfully",

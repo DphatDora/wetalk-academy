@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"wetalk-academy/package/logger"
 	"wetalk-academy/web/admin"
@@ -12,7 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ServeAdminLogsDashboard serves the static HTML UI for viewing logs.
+// ServeAdminLogsDashboard serves the static HTML UI.
 func ServeAdminLogsDashboard(c *gin.Context) {
 	c.Data(http.StatusOK, "text/html; charset=utf-8", admin.LogsDashboardHTML)
 }
@@ -31,7 +35,11 @@ func GetAdminLogFiles(c *gin.Context) {
 }
 
 // GetAdminLogs returns the last N lines from a chosen log file as JSON.
-// Query: file (base name, default: active log file), lines (default 200, max 2000).
+// Query params:
+//   - file  : base name of the log file (default: active log file)
+//   - lines : max lines to return (default 200, max 2000)
+//   - search: optional search value
+//   - search_type: one of "user_id", "token", "ip" (default: "")
 func GetAdminLogs(c *gin.Context) {
 	active := logger.LogFilePath()
 	if active == "" {
@@ -67,15 +75,121 @@ func GetAdminLogs(c *gin.Context) {
 		n = 2000
 	}
 
+	search := strings.TrimSpace(c.Query("search"))
+	searchType := strings.ToLower(strings.TrimSpace(c.Query("search_type")))
+
 	const maxRead = 2 * 1024 * 1024
-	lines, err := logger.ReadTailLines(path, n, maxRead)
+
+	// When search is applied, we read more lines (up to maxRead) to increase chances of matching records,
+	// then filter down to N results in memory.
+	readN := n
+	if search != "" {
+		readN = 10000
+	}
+
+	lines, err := logger.ReadTailLines(path, readN, maxRead)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	reverseLines(lines)
+
+	if search != "" {
+		lines = filterLogLines(lines, searchType, search)
+		// Lines are already newest-first, keep only top N newest records.
+		if len(lines) > n {
+			lines = lines[:n]
+		}
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"path":  path,
-		"lines": lines,
+		"path":        path,
+		"lines":       lines,
+		"search":      search,
+		"search_type": searchType,
 	})
+}
+
+// reverseLines flips the order so the newest record appears first.
+func reverseLines(lines []string) {
+	for i, j := 0, len(lines)-1; i < j; i, j = i+1, j-1 {
+		lines[i], lines[j] = lines[j], lines[i]
+	}
+}
+
+// filterLogLines filters log lines by search type. If searchType is empty or unknown,
+// it falls back to case-insensitive substring matching on raw JSON line.
+func filterLogLines(lines []string, searchType string, query string) []string {
+	q := strings.TrimSpace(query)
+	if q == "" {
+		return lines
+	}
+	qLower := strings.ToLower(q)
+	qTokenHash := sha256Hex(q)
+	out := make([]string, 0, len(lines))
+	for _, l := range lines {
+		if matchLogLine(l, searchType, q, qLower, qTokenHash) {
+			out = append(out, l)
+		}
+	}
+	return out
+}
+
+func matchLogLine(raw string, searchType string, query string, queryLower string, queryTokenHash string) bool {
+	if searchType == "" {
+		return strings.Contains(strings.ToLower(raw), queryLower)
+	}
+
+	var obj map[string]any
+	if err := json.Unmarshal([]byte(raw), &obj); err != nil {
+		return strings.Contains(strings.ToLower(raw), queryLower)
+	}
+
+	switch searchType {
+	case "user_id":
+		v, ok := obj["user_id"]
+		if !ok {
+			return false
+		}
+		return strings.EqualFold(strings.TrimSpace(anyToString(v)), query)
+	case "ip":
+		v, ok := obj["client_ip"]
+		if !ok {
+			return false
+		}
+		return strings.Contains(strings.ToLower(anyToString(v)), queryLower)
+	case "token":
+		if hint, ok := obj["token_hint"]; ok {
+			if strings.Contains(strings.ToLower(anyToString(hint)), queryLower) {
+				return true
+			}
+		}
+		if h, ok := obj["token_hash"]; ok {
+			return strings.EqualFold(strings.TrimSpace(anyToString(h)), queryTokenHash)
+		}
+		return false
+	default:
+		return strings.Contains(strings.ToLower(raw), queryLower)
+	}
+}
+
+func anyToString(v any) string {
+	switch x := v.(type) {
+	case string:
+		return x
+	case float64:
+		return strconv.FormatInt(int64(x), 10)
+	case bool:
+		if x {
+			return "true"
+		}
+		return "false"
+	default:
+		return ""
+	}
+}
+
+func sha256Hex(s string) string {
+	sum := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(sum[:])
 }

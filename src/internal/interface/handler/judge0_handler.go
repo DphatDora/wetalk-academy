@@ -41,6 +41,7 @@ func (h *Judge0Handler) SubmitCode(c *gin.Context) {
 		return
 	}
 
+	logger.InfofWithCtx(ctx, "[Info] Code executed successfully")
 	c.JSON(http.StatusOK, response.APIResponse{
 		Success: true,
 		Message: "Code executed successfully",
