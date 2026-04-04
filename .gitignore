@@ -1,5 +1,5 @@
 /docs
-/src/go.mod
+/src/main
 /src/go.sum
 /src/.env
 /src/logs
