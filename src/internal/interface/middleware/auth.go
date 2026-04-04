@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"strings"
 	"wetalk-academy/config"
 	"wetalk-academy/internal/interface/dto/response"
+	"wetalk-academy/package/logger"
 	"wetalk-academy/package/util"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +16,7 @@ func AuthMiddleware(conf *config.Config) gin.HandlerFunc {
 		// Get Authorization header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			log.Printf("[Err] Missing Authorization header")
+			logger.Errorf("[Err] Missing Authorization header")
 			c.JSON(http.StatusUnauthorized, response.APIResponse{
 				Success: false,
 				Message: "Authorization header is required",
@@ -28,7 +28,7 @@ func AuthMiddleware(conf *config.Config) gin.HandlerFunc {
 		// Check if it's a Bearer token
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			log.Printf("[Err] Invalid Authorization header format")
+			logger.Errorf("[Err] Invalid Authorization header format")
 			c.JSON(http.StatusUnauthorized, response.APIResponse{
 				Success: false,
 				Message: "Invalid authorization header format. Expected 'Bearer <token>'",
@@ -42,7 +42,7 @@ func AuthMiddleware(conf *config.Config) gin.HandlerFunc {
 		// Verify JWT token
 		claims, err := util.VerifyJWT(tokenString, conf.Auth.JWTSecret)
 		if err != nil {
-			log.Printf("[Err] Invalid JWT token: %v", err)
+			logger.Errorf("[Err] Invalid JWT token: %v", err)
 			c.JSON(http.StatusUnauthorized, response.APIResponse{
 				Success: false,
 				Message: "Invalid or expired token",
@@ -77,7 +77,7 @@ func OptionalAuthMiddleware(conf *config.Config) gin.HandlerFunc {
 		// Verify JWT token
 		claims, err := util.VerifyJWT(tokenString, conf.Auth.JWTSecret)
 		if err != nil {
-			log.Printf("[Warn] Invalid JWT token in optional auth: %v", err)
+			logger.Warnf("[Warn] Invalid JWT token in optional auth: %v", err)
 			c.Next()
 			return
 		}

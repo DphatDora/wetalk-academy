@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wetalk Academy — Log Dashboard</title>
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel-border: #21262d;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --accent: #388bfd;
+      --accent-hover: #58a6ff;
+      --err: #f85149;
+      --warn: #d29922;
+      --info: #58a6ff;
+      --debug: #7d8590;
+      --log-bg: #0d1117;
+      --log-border: #21262d;
+      --line-hover: rgba(56, 139, 253, 0.08);
+      --line-border: #21262d;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+      --modal-overlay: rgba(0,0,0,0.75);
+      --input-bg: #0d1117;
+      --scrollbar: #21262d;
+      --scrollbar-thumb: #30363d;
+      --tag-bg: rgba(56,139,253,0.12);
+      --tag-text: #388bfd;
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --panel-border: #d0d7de;
+      --text: #1f2328;
+      --muted: #656d76;
+      --accent: #0969da;
+      --accent-hover: #0550ae;
+      --err: #cf222e;
+      --warn: #9a6700;
+      --info: #0969da;
+      --debug: #656d76;
+      --log-bg: #f6f8fa;
+      --log-border: #d0d7de;
+      --line-hover: rgba(9, 105, 218, 0.06);
+      --line-border: #d0d7de;
+      --shadow: 0 8px 32px rgba(0,0,0,0.12);
+      --modal-overlay: rgba(0,0,0,0.5);
+      --input-bg: #f6f8fa;
+      --scrollbar: #d0d7de;
+      --scrollbar-thumb: #afb8c1;
+      --tag-bg: rgba(9,105,218,0.08);
+      --tag-text: #0969da;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 1.25rem 1rem 1.25rem;
+      border-right: 1px solid var(--panel-border);
+      background: var(--panel);
+      overflow-y: auto;
+      gap: 1rem;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .sidebar-header h1 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── Toggle switch shared ── */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-wrap .toggle-label {
+      font-size: 0.82rem;
+      color: var(--text);
+    }
+
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: var(--panel-border);
+      transition: background 0.22s;
+      border: 1px solid var(--panel-border);
+    }
+    .toggle input:checked ~ .toggle-track {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      transition: transform 0.22s cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
+    }
+    .toggle input:checked ~ .toggle-thumb {
+      transform: translateX(18px);
+    }
+
+    /* ── Theme toggle in header ── */
+    .theme-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+    .theme-icon {
+      font-size: 0.82rem;
+      line-height: 1;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .field label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    select {
+      width: 100%;
+      background: var(--input-bg);
+      color: var(--text);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 0.45rem 0.65rem;
+      cursor: pointer;
+      font-size: 0.82rem;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237d8590' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
+      padding-right: 2rem;
+      transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    select:hover, select:focus { outline: none; border-color: var(--accent); }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 0.65rem;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:active { transform: scale(0.98); }
+
+
+
+    .status-box {
+      background: var(--input-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 0.55rem 0.7rem;
+    }
+    .status {
+      font-size: 0.73rem;
+      color: var(--muted);
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .status.err { color: var(--err); }
+
+    .dir-hint {
+      font-size: 0.68rem;
+      color: var(--muted);
+      word-break: break-all;
+      line-height: 1.4;
+    }
+
+    /* ── Main ── */
+    .main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      padding: 1.25rem;
+      gap: 0.75rem;
+    }
+
+    .main-header {
+      font-size: 0.75rem;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    /* ── Log box ── */
+    .log-wrap {
+      flex: 1;
+      min-height: 0;
+      background: var(--log-bg);
+      border: 1px solid var(--log-border);
+      border-radius: 12px;
+      overflow-y: auto;
+      padding: 0.75rem;
+
+      /* custom scrollbar */
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar);
+    }
+    .log-wrap::-webkit-scrollbar { width: 6px; }
+    .log-wrap::-webkit-scrollbar-track { background: var(--scrollbar); border-radius: 3px; }
+    .log-wrap::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+
+    .line {
+      padding: 0.5rem 0.6rem;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border-bottom: 1px solid var(--line-border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.76rem;
+      line-height: 1.5;
+    }
+    .line:last-child { border-bottom: none; }
+    .line:hover { background: var(--line-hover); }
+
+    .line-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.2rem;
+    }
+    .line-time { color: var(--muted); font-size: 0.7rem; }
+    .lvl-badge {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 0.05rem 0.35rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .lvl-ERROR .lvl-badge { background: rgba(248,81,73,0.15); color: var(--err); }
+    .lvl-WARN  .lvl-badge { background: rgba(210,153,34,0.15); color: var(--warn); }
+    .lvl-INFO  .lvl-badge { background: rgba(88,166,255,0.12); color: var(--info); }
+    .lvl-DEBUG .lvl-badge { background: rgba(125,133,144,0.15); color: var(--debug); }
+    .line-src { font-size: 0.68rem; color: var(--muted); }
+    .line-msg { color: var(--text); word-break: break-word; }
+
+    /* ── Footer ── */
+    footer {
+      flex-shrink: 0;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    footer code {
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem;
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: var(--modal-overlay);
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      width: min(900px, 100%);
+      max-height: min(88vh, 100%);
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow);
+      animation: modal-in 0.18s ease;
+    }
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid var(--panel-border);
+      flex-shrink: 0;
+    }
+    .modal-title { font-size: 0.88rem; font-weight: 700; }
+    .modal-close {
+      background: transparent;
+      border: 1px solid var(--panel-border);
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      transition: border-color 0.15s, color 0.15s;
+      font-family: inherit;
+    }
+    .modal-close:hover { border-color: var(--err); color: var(--err); }
+
+    .modal-body {
+      padding: 1.2rem;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      flex: 1;
+      min-height: 0;
+
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar);
+    }
+    .modal-body::-webkit-scrollbar { width: 6px; }
+    .modal-body::-webkit-scrollbar-track { background: var(--scrollbar); }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+
+    /* JSON syntax highlight */
+    .json-key   { color: #79c0ff; }
+    .json-str   { color: #a5d6ff; }
+    .json-num   { color: #ffa657; }
+    .json-bool  { color: #ff7b72; }
+    .json-null  { color: #8b949e; }
+
+    :root[data-theme="light"] .json-key  { color: #0550ae; }
+    :root[data-theme="light"] .json-str  { color: #0a3069; }
+    :root[data-theme="light"] .json-num  { color: #953800; }
+    :root[data-theme="light"] .json-bool { color: #cf222e; }
+    :root[data-theme="light"] .json-null { color: #656d76; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Log Dashboard</h1>
+        <div class="theme-toggle-wrap">
+          <span class="theme-icon" id="themeIconMoon">🌙</span>
+          <label class="toggle" title="Toggle light/dark mode">
+            <input type="checkbox" id="themeToggle" />
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+          <span class="theme-icon" id="themeIconSun">☀️</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fileSel">Log file</label>
+        <select id="fileSel"></select>
+      </div>
+
+      <div class="field">
+        <label for="linesSel">Lines (tail)</label>
+        <select id="linesSel">
+          <option value="100">100</option>
+          <option value="200" selected>200</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+          <option value="2000">2000</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <button type="button" class="btn-primary" id="refreshBtn">↻ Refresh</button>
+      </div>
+
+      <div class="field">
+        <label class="toggle-wrap">
+          <span class="toggle">
+            <input type="checkbox" id="autoRefresh" />
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </span>
+          <span class="toggle-label">Auto-refresh every 3 s</span>
+        </label>
+      </div>
+
+      <div class="status-box">
+        <span class="status" id="status">Loading…</span>
+      </div>
+
+      <p class="dir-hint" id="dirHint"></p>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="main-header">
+        Log content — click a line to view full JSON detail.
+      </div>
+
+      <div class="log-wrap" id="logBox"></div>
+
+      <footer>
+        API: <code>/api/v1/admin/logs</code> &nbsp; <code>/api/v1/admin/logs/files</code>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <span class="modal-title" id="modalTitle">Log detail</span>
+        <button type="button" class="modal-close" id="modalClose" aria-label="Close">✕ Close</button>
+      </div>
+      <pre class="modal-body" id="modalBody"></pre>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      /* ── Theme ── */
+      const root = document.documentElement;
+      const themeToggle = document.getElementById("themeToggle");
+      let theme = localStorage.getItem("logDashTheme") || "dark";
+      applyTheme(theme);
+
+      themeToggle.addEventListener("change", function () {
+        theme = themeToggle.checked ? "light" : "dark";
+        applyTheme(theme);
+        localStorage.setItem("logDashTheme", theme);
+      });
+
+      function applyTheme(t) {
+        root.setAttribute("data-theme", t);
+        themeToggle.checked = (t === "light");
+      }
+
+      /* ── Token ── */
+      const params = new URLSearchParams(location.search);
+      let token = params.get("token");
+      if (token) sessionStorage.setItem("logDashboardToken", token);
+      else token = sessionStorage.getItem("logDashboardToken");
+
+      const logBox = document.getElementById("logBox");
+      const statusEl = document.getElementById("status");
+      const dirHint = document.getElementById("dirHint");
+      const fileSel = document.getElementById("fileSel");
+      const linesSel = document.getElementById("linesSel");
+      const refreshBtn = document.getElementById("refreshBtn");
+      const autoRefresh = document.getElementById("autoRefresh");
+      const modalOverlay = document.getElementById("modalOverlay");
+      const modalBody = document.getElementById("modalBody");
+      const modalClose = document.getElementById("modalClose");
+
+      let lastRawLines = [];
+      let timer = null;
+
+      function setStatus(msg, isErr) {
+        statusEl.textContent = msg;
+        statusEl.className = "status" + (isErr ? " err" : "");
+      }
+
+      function apiUrl(path) {
+        const q = path.includes("?") ? "&" : "?";
+        return path + q + "token=" + encodeURIComponent(token);
+      }
+
+      /* ── JSON syntax highlight ── */
+      function highlightJson(json) {
+        return json
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(
+            /("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+            function (match) {
+              if (/^"/.test(match)) {
+                if (/:$/.test(match)) return '<span class="json-key">' + match + '</span>';
+                return '<span class="json-str">' + match + '</span>';
+              }
+              if (/true|false/.test(match)) return '<span class="json-bool">' + match + '</span>';
+              if (/null/.test(match)) return '<span class="json-null">' + match + '</span>';
+              return '<span class="json-num">' + match + '</span>';
+            }
+          );
+      }
+
+      /* ── Modal ── */
+      function openModal(raw) {
+        let html;
+        try {
+          const o = JSON.parse(raw);
+          const pretty = JSON.stringify(o, null, 2);
+          html = highlightJson(pretty);
+        } catch (e) {
+          html = raw.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+        modalBody.innerHTML = html;
+        modalOverlay.classList.add("open");
+      }
+
+      function closeModal() { modalOverlay.classList.remove("open"); }
+      modalClose.addEventListener("click", closeModal);
+      modalOverlay.addEventListener("click", function (e) { if (e.target === modalOverlay) closeModal(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
+
+      /* ── File list ── */
+      async function loadFileList() {
+        if (!token) return;
+        try {
+          const res = await fetch(apiUrl("/api/v1/admin/logs/files"), { headers: { Accept: "application/json" } });
+          if (!res.ok) return;
+          const data = await res.json();
+          dirHint.textContent = data.dir ? "Directory: " + data.dir : "";
+          const files = data.files || [];
+          const prev = fileSel.value;
+          fileSel.innerHTML = "";
+          let defaultName = "";
+          files.forEach(function (f) {
+            const opt = document.createElement("option");
+            opt.value = f.name;
+            opt.textContent = f.name + (f.current ? " (active)" : "") + " — " + formatSize(f.size);
+            if (f.current) defaultName = f.name;
+            fileSel.appendChild(opt);
+          });
+          if (prev && [...fileSel.options].some(function (o) { return o.value === prev; })) fileSel.value = prev;
+          else if (defaultName) fileSel.value = defaultName;
+        } catch (e) { /* ignore */ }
+      }
+
+      function formatSize(n) {
+        if (n < 1024) return n + " B";
+        if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+        return (n / (1024 * 1024)).toFixed(1) + " MB";
+      }
+
+      function escapeHtml(s) {
+        const d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      /* ── Load logs ── */
+      async function loadLogs() {
+        if (!token) {
+          setStatus("Missing token. Open URL as /admin/logs?token=YOUR_LOG_DASHBOARD_TOKEN", true);
+          logBox.innerHTML = "";
+          return;
+        }
+        const lines = linesSel.value;
+        const file = fileSel.value || "app.log";
+        const url = apiUrl("/api/v1/admin/logs") + "&lines=" + encodeURIComponent(lines) + "&file=" + encodeURIComponent(file);
+        try {
+          const res = await fetch(url, { headers: { Accept: "application/json" } });
+          if (res.status === 401) { setStatus("401 — Invalid token", true); logBox.innerHTML = ""; return; }
+          if (!res.ok) { const t = await res.text(); setStatus("Error " + res.status + ": " + t, true); return; }
+          const data = await res.json();
+          const linesArr = data.lines || [];
+          lastRawLines = linesArr;
+          logBox.innerHTML = "";
+          linesArr.forEach(function (raw, idx) {
+            const div = document.createElement("div");
+            div.className = "line";
+            div.dataset.lineIndex = String(idx);
+            div.title = "Click to view detail";
+            let obj = null;
+            try { obj = JSON.parse(raw); } catch (e) {}
+            if (obj && typeof obj === "object") {
+              const lvl = (obj.level || "").toString().toUpperCase();
+              div.classList.add("lvl-" + lvl);
+              const time = obj.time || "";
+              const msg = obj.msg != null ? String(obj.msg) : raw;
+              const src = obj.source ? obj.source : "";
+              div.innerHTML =
+                '<div class="line-meta">' +
+                  '<span class="line-time">' + escapeHtml(time) + '</span>' +
+                  (lvl ? '<span class="lvl-badge">' + escapeHtml(lvl) + '</span>' : '') +
+                  (src ? '<span class="line-src">' + escapeHtml(src) + '</span>' : '') +
+                '</div>' +
+                '<div class="line-msg">' + escapeHtml(msg) + '</div>';
+            } else {
+              div.innerHTML = '<div class="line-msg">' + escapeHtml(raw) + '</div>';
+            }
+            logBox.appendChild(div);
+          });
+          setStatus("Loaded — " + (data.path || file) + " — " + new Date().toLocaleTimeString());
+        } catch (e) {
+          setStatus(String(e), true);
+        }
+      }
+
+      logBox.addEventListener("click", function (e) {
+        const line = e.target.closest(".line");
+        if (!line) return;
+        const idx = parseInt(line.dataset.lineIndex, 10);
+        if (isNaN(idx) || !lastRawLines[idx]) return;
+        openModal(lastRawLines[idx]);
+      });
+
+      refreshBtn.addEventListener("click", function () { loadFileList().then(loadLogs); });
+      linesSel.addEventListener("change", loadLogs);
+      fileSel.addEventListener("change", loadLogs);
+
+      autoRefresh.addEventListener("change", function () {
+        if (timer) { clearInterval(timer); timer = null; }
+        if (autoRefresh.checked) timer = setInterval(loadLogs, 3000);
+      });
+
+      (async function init() {
+        if (!token) { setStatus("Missing token. Open URL as /admin/logs?token=YOUR_LOG_DASHBOARD_TOKEN", true); return; }
+        await loadFileList();
+        await loadLogs();
+      })();
+    })();
+  </script>
+</body>
+</html>

@@ -15,7 +15,11 @@ database:
   debug: true
 
 log:
-  level: "debug"
+  level:
+  filePath:
+  maxSizeMB: 10
+  console:
+  dashboardToken:
 
 server:
   url:

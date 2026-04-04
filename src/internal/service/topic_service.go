@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 	"wetalk-academy/internal/domain/model"
 	"wetalk-academy/internal/domain/repository"
 	"wetalk-academy/internal/interface/dto/request"
 	"wetalk-academy/internal/interface/dto/response"
+	"wetalk-academy/package/logger"
 	"wetalk-academy/package/util"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -40,7 +40,7 @@ func (s *TopicService) CreateTopic(ctx context.Context, userId uint64, req *requ
 	}
 
 	if err := s.topicRepo.CreateTopic(ctx, topic); err != nil {
-		log.Printf("[Err] Error creating topic in TopicService.CreateTopic: %v", err)
+		logger.Errorf("[Err] Error creating topic in TopicService.CreateTopic: %v", err)
 		return fmt.Errorf("failed to create topic: %w", err)
 	}
 
@@ -50,7 +50,7 @@ func (s *TopicService) CreateTopic(ctx context.Context, userId uint64, req *requ
 func (s *TopicService) GetTopics(ctx context.Context, page, limit int) ([]*response.TopicResponse, int64, error) {
 	topics, total, err := s.topicRepo.GetTopics(ctx, page, limit)
 	if err != nil {
-		log.Printf("[Err] Error getting topics in TopicService.GetTopics: %v", err)
+		logger.Errorf("[Err] Error getting topics in TopicService.GetTopics: %v", err)
 		return nil, 0, fmt.Errorf("failed to get topics: %w", err)
 	}
 
@@ -68,7 +68,7 @@ func (s *TopicService) GetTopicBySlug(ctx context.Context, slug string) (*respon
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("topic not found")
 		}
-		log.Printf("[Err] Error getting topic in TopicService.GetTopicBySlug: %v", err)
+		logger.Errorf("[Err] Error getting topic in TopicService.GetTopicBySlug: %v", err)
 		return nil, fmt.Errorf("failed to get topic: %w", err)
 	}
 
@@ -81,7 +81,7 @@ func (s *TopicService) UpdateTopic(ctx context.Context, slug string, userId uint
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("topic not found")
 		}
-		log.Printf("[Err] Error getting topic in TopicService.UpdateTopic: %v", err)
+		logger.Errorf("[Err] Error getting topic in TopicService.UpdateTopic: %v", err)
 		return fmt.Errorf("failed to get topic: %w", err)
 	}
 
@@ -94,7 +94,7 @@ func (s *TopicService) UpdateTopic(ctx context.Context, slug string, userId uint
 	existingTopic.UpdatedAt = time.Now()
 
 	if err := s.topicRepo.UpdateTopic(ctx, existingTopic); err != nil {
-		log.Printf("[Err] Error updating topic in TopicService.UpdateTopic: %v", err)
+		logger.Errorf("[Err] Error updating topic in TopicService.UpdateTopic: %v", err)
 		return fmt.Errorf("failed to update topic: %w", err)
 	}
 
@@ -107,7 +107,7 @@ func (s *TopicService) DeleteTopic(ctx context.Context, slug string, userId uint
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("topic not found")
 		}
-		log.Printf("[Err] Error getting topic in TopicService.DeleteTopic: %v", err)
+		logger.Errorf("[Err] Error getting topic in TopicService.DeleteTopic: %v", err)
 		return fmt.Errorf("failed to get topic: %w", err)
 	}
 
@@ -118,7 +118,7 @@ func (s *TopicService) DeleteTopic(ctx context.Context, slug string, userId uint
 	// Check if topic has lessons
 	count, err := s.lessonRepo.CountLessonsByTopicID(ctx, existingTopic.ID.Hex())
 	if err != nil {
-		log.Printf("[Err] Error counting lessons in TopicService.DeleteTopic: %v", err)
+		logger.Errorf("[Err] Error counting lessons in TopicService.DeleteTopic: %v", err)
 		return fmt.Errorf("failed to check lessons: %w", err)
 	}
 
@@ -127,7 +127,7 @@ func (s *TopicService) DeleteTopic(ctx context.Context, slug string, userId uint
 	}
 
 	if err := s.topicRepo.DeleteTopic(ctx, slug); err != nil {
-		log.Printf("[Err] Error deleting topic in TopicService.DeleteTopic: %v", err)
+		logger.Errorf("[Err] Error deleting topic in TopicService.DeleteTopic: %v", err)
 		return fmt.Errorf("failed to delete topic: %w", err)
 	}
 
@@ -140,13 +140,13 @@ func (s *TopicService) GetLessonsInTopic(ctx context.Context, slug string, page,
 		if err == mongo.ErrNoDocuments {
 			return nil, 0, fmt.Errorf("topic not found")
 		}
-		log.Printf("[Err] Error getting topic in TopicService.GetLessonsInTopic: %v", err)
+		logger.Errorf("[Err] Error getting topic in TopicService.GetLessonsInTopic: %v", err)
 		return nil, 0, fmt.Errorf("failed to get topic: %w", err)
 	}
 
 	lessons, total, err := s.lessonRepo.GetLessonsByTopicID(ctx, topic.ID.Hex(), page, limit)
 	if err != nil {
-		log.Printf("[Err] Error getting lessons in TopicService.GetLessonsInTopic: %v", err)
+		logger.Errorf("[Err] Error getting lessons in TopicService.GetLessonsInTopic: %v", err)
 		return nil, 0, fmt.Errorf("failed to get lessons: %w", err)
 	}
 

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,6 +9,7 @@ import (
 	"wetalk-academy/internal/service"
 	"wetalk-academy/package/constant"
 	"wetalk-academy/package/util"
+	"wetalk-academy/package/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,7 +27,7 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		log.Printf("[Err] %s in TopicHandler.CreateTopic", err.Error())
+		logger.Errorf("[Err] %s in TopicHandler.CreateTopic", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -37,7 +37,7 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
 
 	var req request.CreateTopicRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("[Err] Error binding JSON in TopicHandler.CreateTopic: %v", err)
+		logger.Errorf("[Err] Error binding JSON in TopicHandler.CreateTopic: %v", err)
 		c.JSON(http.StatusBadRequest, response.APIResponse{
 			Success: false,
 			Message: "Invalid request format: " + err.Error(),
@@ -47,7 +47,7 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
 
 	err = h.topicService.CreateTopic(ctx, userID, &req)
 	if err != nil {
-		log.Printf("[Err] Error in service layer TopicHandler.CreateTopic: %v", err)
+		logger.Errorf("[Err] Error in service layer TopicHandler.CreateTopic: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to create topic",
@@ -76,7 +76,7 @@ func (h *TopicHandler) GetTopics(c *gin.Context) {
 
 	topics, total, err := h.topicService.GetTopics(ctx, page, limit)
 	if err != nil {
-		log.Printf("[Err] Error in service layer TopicHandler.GetTopics: %v", err)
+		logger.Errorf("[Err] Error in service layer TopicHandler.GetTopics: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to get topics",
@@ -111,7 +111,7 @@ func (h *TopicHandler) GetTopicBySlug(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer TopicHandler.GetTopicBySlug: %v", err)
+		logger.Errorf("[Err] Error in service layer TopicHandler.GetTopicBySlug: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to get topic",
@@ -132,7 +132,7 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		log.Printf("[Err] %s in TopicHandler.UpdateTopic", err.Error())
+		logger.Errorf("[Err] %s in TopicHandler.UpdateTopic", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -142,7 +142,7 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
 
 	var req request.UpdateTopicRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("[Err] Error binding JSON in TopicHandler.UpdateTopic: %v", err)
+		logger.Errorf("[Err] Error binding JSON in TopicHandler.UpdateTopic: %v", err)
 		c.JSON(http.StatusBadRequest, response.APIResponse{
 			Success: false,
 			Message: "Invalid request format: " + err.Error(),
@@ -167,7 +167,7 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer TopicHandler.UpdateTopic: %v", err)
+		logger.Errorf("[Err] Error in service layer TopicHandler.UpdateTopic: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to update topic",
@@ -187,7 +187,7 @@ func (h *TopicHandler) DeleteTopic(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		log.Printf("[Err] %s in TopicHandler.DeleteTopic", err.Error())
+		logger.Errorf("[Err] %s in TopicHandler.DeleteTopic", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -219,7 +219,7 @@ func (h *TopicHandler) DeleteTopic(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer TopicHandler.DeleteTopic: %v", err)
+		logger.Errorf("[Err] Error in service layer TopicHandler.DeleteTopic: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to delete topic",
@@ -257,7 +257,7 @@ func (h *TopicHandler) GetLessonsInTopic(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer TopicHandler.GetLessonsInTopic: %v", err)
+		logger.Errorf("[Err] Error in service layer TopicHandler.GetLessonsInTopic: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to get lessons",

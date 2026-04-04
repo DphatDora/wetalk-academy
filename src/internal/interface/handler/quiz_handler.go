@@ -1,13 +1,13 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"strings"
 	"wetalk-academy/internal/interface/dto/request"
 	"wetalk-academy/internal/interface/dto/response"
 	"wetalk-academy/internal/service"
 	"wetalk-academy/package/util"
+	"wetalk-academy/package/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +25,7 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		log.Printf("[Err] %s in QuizHandler.CreateQuiz", err.Error())
+		logger.Errorf("[Err] %s in QuizHandler.CreateQuiz", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -35,7 +35,7 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 
 	var req request.CreateQuizRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("[Err] Error binding JSON in QuizHandler.CreateQuiz: %v", err)
+		logger.Errorf("[Err] Error binding JSON in QuizHandler.CreateQuiz: %v", err)
 		c.JSON(http.StatusBadRequest, response.APIResponse{
 			Success: false,
 			Message: "Invalid request format: " + err.Error(),
@@ -59,7 +59,7 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer QuizHandler.CreateQuiz: %v", err)
+		logger.Errorf("[Err] Error in service layer QuizHandler.CreateQuiz: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to create quiz",
@@ -87,7 +87,7 @@ func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer QuizHandler.GetQuizByID: %v", err)
+		logger.Errorf("[Err] Error in service layer QuizHandler.GetQuizByID: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to get quiz",
@@ -116,7 +116,7 @@ func (h *QuizHandler) GetQuizzesByLessonSlug(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer QuizHandler.GetQuizzesByLessonSlug: %v", err)
+		logger.Errorf("[Err] Error in service layer QuizHandler.GetQuizzesByLessonSlug: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to get quizzes",
@@ -137,7 +137,7 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		log.Printf("[Err] %s in QuizHandler.UpdateQuiz", err.Error())
+		logger.Errorf("[Err] %s in QuizHandler.UpdateQuiz", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -147,7 +147,7 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 
 	var req request.UpdateQuizRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("[Err] Error binding JSON in QuizHandler.UpdateQuiz: %v", err)
+		logger.Errorf("[Err] Error binding JSON in QuizHandler.UpdateQuiz: %v", err)
 		c.JSON(http.StatusBadRequest, response.APIResponse{
 			Success: false,
 			Message: "Invalid request format: " + err.Error(),
@@ -171,7 +171,7 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer QuizHandler.UpdateQuiz: %v", err)
+		logger.Errorf("[Err] Error in service layer QuizHandler.UpdateQuiz: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to update quiz",
@@ -191,7 +191,7 @@ func (h *QuizHandler) DeleteQuiz(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		log.Printf("[Err] %s in QuizHandler.DeleteQuiz", err.Error())
+		logger.Errorf("[Err] %s in QuizHandler.DeleteQuiz", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -215,7 +215,7 @@ func (h *QuizHandler) DeleteQuiz(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer QuizHandler.DeleteQuiz: %v", err)
+		logger.Errorf("[Err] Error in service layer QuizHandler.DeleteQuiz: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to delete quiz",
@@ -234,7 +234,7 @@ func (h *QuizHandler) SubmitQuiz(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		log.Printf("[Err] %s in QuizHandler.SubmitQuiz", err.Error())
+		logger.Errorf("[Err] %s in QuizHandler.SubmitQuiz", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -244,7 +244,7 @@ func (h *QuizHandler) SubmitQuiz(c *gin.Context) {
 
 	var req request.SubmitQuizRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("[Err] Error binding JSON in QuizHandler.SubmitQuiz: %v", err)
+		logger.Errorf("[Err] Error binding JSON in QuizHandler.SubmitQuiz: %v", err)
 		c.JSON(http.StatusBadRequest, response.APIResponse{
 			Success: false,
 			Message: "Invalid request format: " + err.Error(),
@@ -269,7 +269,7 @@ func (h *QuizHandler) SubmitQuiz(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer QuizHandler.SubmitQuiz: %v", err)
+		logger.Errorf("[Err] Error in service layer QuizHandler.SubmitQuiz: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to submit quiz",

@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"strings"
 	"wetalk-academy/internal/interface/dto/request"
 	"wetalk-academy/internal/interface/dto/response"
+	"wetalk-academy/package/logger"
 	"wetalk-academy/internal/service"
 	"wetalk-academy/package/util"
 
@@ -25,7 +25,7 @@ func (h *LessonHandler) CreateLesson(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		log.Printf("[Err] %s in LessonHandler.CreateLesson", err.Error())
+		logger.Errorf("[Err] %s in LessonHandler.CreateLesson", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -35,7 +35,7 @@ func (h *LessonHandler) CreateLesson(c *gin.Context) {
 
 	var req request.CreateLessonRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("[Err] Error binding JSON in LessonHandler.CreateLesson: %v", err)
+		logger.Errorf("[Err] Error binding JSON in LessonHandler.CreateLesson: %v", err)
 		c.JSON(http.StatusBadRequest, response.APIResponse{
 			Success: false,
 			Message: "Invalid request format: " + err.Error(),
@@ -60,7 +60,7 @@ func (h *LessonHandler) CreateLesson(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer LessonHandler.CreateLesson: %v", err)
+		logger.Errorf("[Err] Error in service layer LessonHandler.CreateLesson: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to create lesson",
@@ -88,7 +88,7 @@ func (h *LessonHandler) GetLessonBySlug(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer LessonHandler.GetLessonBySlug: %v", err)
+		logger.Errorf("[Err] Error in service layer LessonHandler.GetLessonBySlug: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to get lesson",
@@ -109,7 +109,7 @@ func (h *LessonHandler) UpdateLesson(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		log.Printf("[Err] %s in LessonHandler.UpdateLesson", err.Error())
+		logger.Errorf("[Err] %s in LessonHandler.UpdateLesson", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -119,7 +119,7 @@ func (h *LessonHandler) UpdateLesson(c *gin.Context) {
 
 	var req request.UpdateLessonRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("[Err] Error binding JSON in LessonHandler.UpdateLesson: %v", err)
+		logger.Errorf("[Err] Error binding JSON in LessonHandler.UpdateLesson: %v", err)
 		c.JSON(http.StatusBadRequest, response.APIResponse{
 			Success: false,
 			Message: "Invalid request format: " + err.Error(),
@@ -144,7 +144,7 @@ func (h *LessonHandler) UpdateLesson(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer LessonHandler.UpdateLesson: %v", err)
+		logger.Errorf("[Err] Error in service layer LessonHandler.UpdateLesson: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to update lesson",
@@ -164,7 +164,7 @@ func (h *LessonHandler) DeleteLesson(c *gin.Context) {
 
 	userID, err := util.GetUserIDFromContext(c)
 	if err != nil {
-		log.Printf("[Err] %s in LessonHandler.DeleteLesson", err.Error())
+		logger.Errorf("[Err] %s in LessonHandler.DeleteLesson", err.Error())
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
 			Message: "Unauthorized",
@@ -189,7 +189,7 @@ func (h *LessonHandler) DeleteLesson(c *gin.Context) {
 			return
 		}
 
-		log.Printf("[Err] Error in service layer LessonHandler.DeleteLesson: %v", err)
+		logger.Errorf("[Err] Error in service layer LessonHandler.DeleteLesson: %v", err)
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
 			Success: false,
 			Message: "Failed to delete lesson",

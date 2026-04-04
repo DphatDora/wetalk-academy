@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 	"wetalk-academy/internal/domain/model"
 	"wetalk-academy/internal/domain/repository"
 	"wetalk-academy/internal/interface/dto/request"
 	"wetalk-academy/internal/interface/dto/response"
+	"wetalk-academy/package/logger"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -41,7 +41,7 @@ func (s *QuizService) CreateQuiz(ctx context.Context, userID uint64, req *reques
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("lesson not found")
 		}
-		log.Printf("[Err] Error getting lesson in QuizService.CreateQuiz: %v", err)
+		logger.Errorf("[Err] Error getting lesson in QuizService.CreateQuiz: %v", err)
 		return fmt.Errorf("failed to get lesson: %w", err)
 	}
 
@@ -68,7 +68,7 @@ func (s *QuizService) CreateQuiz(ctx context.Context, userID uint64, req *reques
 	}
 
 	if err := s.quizRepo.CreateQuiz(ctx, quiz); err != nil {
-		log.Printf("[Err] Error creating quiz in QuizService.CreateQuiz: %v", err)
+		logger.Errorf("[Err] Error creating quiz in QuizService.CreateQuiz: %v", err)
 		return fmt.Errorf("failed to create quiz: %w", err)
 	}
 
@@ -81,7 +81,7 @@ func (s *QuizService) GetQuizByID(ctx context.Context, quizID string) (*response
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("quiz not found")
 		}
-		log.Printf("[Err] Error getting quiz in QuizService.GetQuizByID: %v", err)
+		logger.Errorf("[Err] Error getting quiz in QuizService.GetQuizByID: %v", err)
 		return nil, fmt.Errorf("failed to get quiz: %w", err)
 	}
 
@@ -94,13 +94,13 @@ func (s *QuizService) GetQuizzesByLessonSlug(ctx context.Context, lessonSlug str
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("lesson not found")
 		}
-		log.Printf("[Err] Error getting lesson in QuizService.GetQuizzesByLessonSlug: %v", err)
+		logger.Errorf("[Err] Error getting lesson in QuizService.GetQuizzesByLessonSlug: %v", err)
 		return nil, fmt.Errorf("failed to get lesson: %w", err)
 	}
 
 	quizzes, err := s.quizRepo.GetQuizzesByLessonID(ctx, lesson.ID.Hex())
 	if err != nil {
-		log.Printf("[Err] Error getting quizzes in QuizService.GetQuizzesByLessonSlug: %v", err)
+		logger.Errorf("[Err] Error getting quizzes in QuizService.GetQuizzesByLessonSlug: %v", err)
 		return nil, fmt.Errorf("failed to get quizzes: %w", err)
 	}
 
@@ -113,7 +113,7 @@ func (s *QuizService) UpdateQuiz(ctx context.Context, quizID string, userID uint
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("quiz not found")
 		}
-		log.Printf("[Err] Error getting quiz in QuizService.UpdateQuiz: %v", err)
+		logger.Errorf("[Err] Error getting quiz in QuizService.UpdateQuiz: %v", err)
 		return fmt.Errorf("failed to get quiz: %w", err)
 	}
 
@@ -122,7 +122,7 @@ func (s *QuizService) UpdateQuiz(ctx context.Context, quizID string, userID uint
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("lesson not found")
 		}
-		log.Printf("[Err] Error getting lesson in QuizService.UpdateQuiz: %v", err)
+		logger.Errorf("[Err] Error getting lesson in QuizService.UpdateQuiz: %v", err)
 		return fmt.Errorf("failed to get lesson: %w", err)
 	}
 
@@ -144,7 +144,7 @@ func (s *QuizService) UpdateQuiz(ctx context.Context, quizID string, userID uint
 	quiz.TimeLimit = req.TimeLimit
 
 	if err := s.quizRepo.UpdateQuiz(ctx, quiz); err != nil {
-		log.Printf("[Err] Error updating quiz in QuizService.UpdateQuiz: %v", err)
+		logger.Errorf("[Err] Error updating quiz in QuizService.UpdateQuiz: %v", err)
 		return fmt.Errorf("failed to update quiz: %w", err)
 	}
 
@@ -157,7 +157,7 @@ func (s *QuizService) DeleteQuiz(ctx context.Context, quizID string, userID uint
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("quiz not found")
 		}
-		log.Printf("[Err] Error getting quiz in QuizService.DeleteQuiz: %v", err)
+		logger.Errorf("[Err] Error getting quiz in QuizService.DeleteQuiz: %v", err)
 		return fmt.Errorf("failed to get quiz: %w", err)
 	}
 
@@ -166,7 +166,7 @@ func (s *QuizService) DeleteQuiz(ctx context.Context, quizID string, userID uint
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("lesson not found")
 		}
-		log.Printf("[Err] Error getting lesson in QuizService.DeleteQuiz: %v", err)
+		logger.Errorf("[Err] Error getting lesson in QuizService.DeleteQuiz: %v", err)
 		return fmt.Errorf("failed to get lesson: %w", err)
 	}
 
@@ -175,7 +175,7 @@ func (s *QuizService) DeleteQuiz(ctx context.Context, quizID string, userID uint
 	}
 
 	if err := s.quizRepo.DeleteQuiz(ctx, quizID); err != nil {
-		log.Printf("[Err] Error deleting quiz in QuizService.DeleteQuiz: %v", err)
+		logger.Errorf("[Err] Error deleting quiz in QuizService.DeleteQuiz: %v", err)
 		return fmt.Errorf("failed to delete quiz: %w", err)
 	}
 
@@ -188,7 +188,7 @@ func (s *QuizService) SubmitQuiz(ctx context.Context, userID uint64, req *reques
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("quiz not found")
 		}
-		log.Printf("[Err] Error getting quiz in QuizService.SubmitQuiz: %v", err)
+		logger.Errorf("[Err] Error getting quiz in QuizService.SubmitQuiz: %v", err)
 		return nil, fmt.Errorf("failed to get quiz: %w", err)
 	}
 
@@ -209,7 +209,7 @@ func (s *QuizService) SubmitQuiz(ctx context.Context, userID uint64, req *reques
 	}
 
 	if err := s.submissionRepo.CreateSubmission(ctx, submission); err != nil {
-		log.Printf("[Err] Error creating submission in QuizService.SubmitQuiz: %v", err)
+		logger.Errorf("[Err] Error creating submission in QuizService.SubmitQuiz: %v", err)
 		return nil, fmt.Errorf("failed to submit quiz: %w", err)
 	}
 
@@ -222,7 +222,7 @@ func (s *QuizService) checkTopicOwnership(ctx context.Context, topicID string, u
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("topic not found")
 		}
-		log.Printf("[Err] Error getting topic in QuizService.checkTopicOwnership: %v", err)
+		logger.Errorf("[Err] Error getting topic in QuizService.checkTopicOwnership: %v", err)
 		return fmt.Errorf("failed to get topic: %w", err)
 	}
 
