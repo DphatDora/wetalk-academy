@@ -1,6 +1,7 @@
 package router
 
 import (
+	"strings"
 	"wetalk-academy/config"
 	repository "wetalk-academy/internal/infrastructure/db/repository"
 	"wetalk-academy/internal/infrastructure/judge0"
@@ -23,6 +24,7 @@ type AppHandler struct {
 func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 	router := gin.Default()
 	router.Use(middleware.CORSMiddleware(conf.App.Whitelist))
+	router.Use(middleware.RequestMetricsMiddleware())
 
 	// repositories
 	topicRepo := repository.NewTopicRepository(mongoDB)
@@ -54,6 +56,18 @@ func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 	{
 		setupPublicRoutes(api, appHandler)
 		setupProtectedRoutes(api, conf, appHandler)
+	}
+
+	if strings.TrimSpace(conf.Log.DashboardToken) != "" {
+		dash := router.Group("")
+		dash.Use(middleware.LogDashboardAuth(conf))
+		dash.GET("/admin/logs", handler.ServeAdminLogsDashboard)
+
+		apiAdmin := router.Group("/api/v1/admin")
+		apiAdmin.Use(middleware.LogDashboardAuth(conf))
+		apiAdmin.GET("/logs/files", handler.GetAdminLogFiles)
+		apiAdmin.GET("/logs", handler.GetAdminLogs)
+		apiAdmin.GET("/metrics", handler.GetAdminMetrics)
 	}
 
 	return router

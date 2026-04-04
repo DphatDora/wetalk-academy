@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 	"wetalk-academy/internal/domain/model"
 	"wetalk-academy/internal/domain/repository"
 	"wetalk-academy/internal/interface/dto/request"
 	"wetalk-academy/internal/interface/dto/response"
+	"wetalk-academy/package/logger"
 	"wetalk-academy/package/util"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -34,7 +34,7 @@ func (s *LessonService) CreateLesson(ctx context.Context, userId uint64, req *re
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("topic not found")
 		}
-		log.Printf("[Err] Error getting topic in LessonService.CreateLesson: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting topic in LessonService.CreateLesson: %v", err)
 		return fmt.Errorf("failed to get topic: %w", err)
 	}
 
@@ -53,7 +53,7 @@ func (s *LessonService) CreateLesson(ctx context.Context, userId uint64, req *re
 	}
 
 	if err := s.lessonRepo.CreateLesson(ctx, lesson); err != nil {
-		log.Printf("[Err] Error creating lesson in LessonService.CreateLesson: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error creating lesson in LessonService.CreateLesson: %v", err)
 		return fmt.Errorf("failed to create lesson: %w", err)
 	}
 
@@ -66,7 +66,7 @@ func (s *LessonService) GetLessonBySlug(ctx context.Context, slug string) (*resp
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("lesson not found")
 		}
-		log.Printf("[Err] Error getting lesson in LessonService.GetLessonBySlug: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting lesson in LessonService.GetLessonBySlug: %v", err)
 		return nil, fmt.Errorf("failed to get lesson: %w", err)
 	}
 
@@ -79,7 +79,7 @@ func (s *LessonService) UpdateLesson(ctx context.Context, slug string, userId ui
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("lesson not found")
 		}
-		log.Printf("[Err] Error getting lesson in LessonService.UpdateLesson: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting lesson in LessonService.UpdateLesson: %v", err)
 		return fmt.Errorf("failed to get lesson: %w", err)
 	}
 
@@ -89,7 +89,7 @@ func (s *LessonService) UpdateLesson(ctx context.Context, slug string, userId ui
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("topic not found")
 		}
-		log.Printf("[Err] Error getting topic in LessonService.UpdateLesson: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting topic in LessonService.UpdateLesson: %v", err)
 		return fmt.Errorf("failed to get topic: %w", err)
 	}
 
@@ -102,7 +102,7 @@ func (s *LessonService) UpdateLesson(ctx context.Context, slug string, userId ui
 	existingLesson.UpdatedAt = time.Now()
 
 	if err := s.lessonRepo.UpdateLesson(ctx, existingLesson); err != nil {
-		log.Printf("[Err] Error updating lesson in LessonService.UpdateLesson: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error updating lesson in LessonService.UpdateLesson: %v", err)
 		return fmt.Errorf("failed to update lesson: %w", err)
 	}
 
@@ -115,7 +115,7 @@ func (s *LessonService) DeleteLesson(ctx context.Context, slug string, userId ui
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("lesson not found")
 		}
-		log.Printf("[Err] Error getting lesson in LessonService.DeleteLesson: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting lesson in LessonService.DeleteLesson: %v", err)
 		return fmt.Errorf("failed to get lesson: %w", err)
 	}
 
@@ -125,7 +125,7 @@ func (s *LessonService) DeleteLesson(ctx context.Context, slug string, userId ui
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("topic not found")
 		}
-		log.Printf("[Err] Error getting topic in LessonService.DeleteLesson: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting topic in LessonService.DeleteLesson: %v", err)
 		return fmt.Errorf("failed to get topic: %w", err)
 	}
 
@@ -133,23 +133,22 @@ func (s *LessonService) DeleteLesson(ctx context.Context, slug string, userId ui
 		return fmt.Errorf("unauthorized: user does not own this topic")
 	}
 
-	// Delete associated content if exists
 	lessonID := existingLesson.ID.Hex()
 	contentExists, err := s.contentRepo.ContentExistsByLessonID(ctx, lessonID)
 	if err != nil {
-		log.Printf("[Err] Error checking content existence in LessonService.DeleteLesson: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error checking content existence in LessonService.DeleteLesson: %v", err)
 		return fmt.Errorf("failed to check content: %w", err)
 	}
 
 	if contentExists {
 		if err := s.contentRepo.DeleteContentByLessonID(ctx, lessonID); err != nil {
-			log.Printf("[Err] Error deleting content in LessonService.DeleteLesson: %v", err)
+			logger.ErrorfWithCtx(ctx, "[Err] Error deleting content in LessonService.DeleteLesson: %v", err)
 			return fmt.Errorf("failed to delete content: %w", err)
 		}
 	}
 
 	if err := s.lessonRepo.DeleteLesson(ctx, slug); err != nil {
-		log.Printf("[Err] Error deleting lesson in LessonService.DeleteLesson: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error deleting lesson in LessonService.DeleteLesson: %v", err)
 		return fmt.Errorf("failed to delete lesson: %w", err)
 	}
 

@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 	"wetalk-academy/internal/domain/model"
 	"wetalk-academy/internal/domain/repository"
 	"wetalk-academy/internal/interface/dto/request"
 	"wetalk-academy/internal/interface/dto/response"
 	"wetalk-academy/package/constant"
+	"wetalk-academy/package/logger"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -39,7 +39,7 @@ func (s *ContentService) validateOwnership(ctx context.Context, lessonSlug strin
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("lesson not found")
 		}
-		log.Printf("[Err] Error getting lesson in ContentService.validateOwnership: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting lesson in ContentService.validateOwnership: %v", err)
 		return nil, fmt.Errorf("failed to get lesson: %w", err)
 	}
 
@@ -49,7 +49,7 @@ func (s *ContentService) validateOwnership(ctx context.Context, lessonSlug strin
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("topic not found")
 		}
-		log.Printf("[Err] Error getting topic in ContentService.validateOwnership: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting topic in ContentService.validateOwnership: %v", err)
 		return nil, fmt.Errorf("failed to get topic: %w", err)
 	}
 
@@ -88,7 +88,6 @@ func (s *ContentService) validateSections(sections []request.ContentSectionReque
 }
 
 func (s *ContentService) CreateContent(ctx context.Context, lessonSlug string, userId uint64, req *request.CreateContentRequest) error {
-	// Validate ownership
 	lesson, err := s.validateOwnership(ctx, lessonSlug, userId)
 	if err != nil {
 		return err
@@ -96,14 +95,13 @@ func (s *ContentService) CreateContent(ctx context.Context, lessonSlug string, u
 
 	exists, err := s.contentRepo.ContentExistsByLessonID(ctx, lesson.ID.Hex())
 	if err != nil {
-		log.Printf("[Err] Error checking content existence in ContentService.CreateContent: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error checking content existence in ContentService.CreateContent: %v", err)
 		return fmt.Errorf("failed to check content: %w", err)
 	}
 	if exists {
 		return fmt.Errorf("content already exists for this lesson")
 	}
 
-	// Validate sections
 	if err := s.validateSections(req.Sections); err != nil {
 		return err
 	}
@@ -128,7 +126,7 @@ func (s *ContentService) CreateContent(ctx context.Context, lessonSlug string, u
 	}
 
 	if err := s.contentRepo.CreateContent(ctx, content); err != nil {
-		log.Printf("[Err] Error creating content in ContentService.CreateContent: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error creating content in ContentService.CreateContent: %v", err)
 		return fmt.Errorf("failed to create content: %w", err)
 	}
 
@@ -141,7 +139,7 @@ func (s *ContentService) GetContentByLessonSlug(ctx context.Context, lessonSlug 
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("lesson not found")
 		}
-		log.Printf("[Err] Error getting lesson in ContentService.GetContentByLessonSlug: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting lesson in ContentService.GetContentByLessonSlug: %v", err)
 		return nil, fmt.Errorf("failed to get lesson: %w", err)
 	}
 
@@ -150,7 +148,7 @@ func (s *ContentService) GetContentByLessonSlug(ctx context.Context, lessonSlug 
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("content not found")
 		}
-		log.Printf("[Err] Error getting content in ContentService.GetContentByLessonSlug: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting content in ContentService.GetContentByLessonSlug: %v", err)
 		return nil, fmt.Errorf("failed to get content: %w", err)
 	}
 
@@ -158,7 +156,6 @@ func (s *ContentService) GetContentByLessonSlug(ctx context.Context, lessonSlug 
 }
 
 func (s *ContentService) UpdateContent(ctx context.Context, lessonSlug string, userId uint64, req *request.UpdateContentRequest) error {
-	// Validate ownership
 	lesson, err := s.validateOwnership(ctx, lessonSlug, userId)
 	if err != nil {
 		return err
@@ -169,16 +166,14 @@ func (s *ContentService) UpdateContent(ctx context.Context, lessonSlug string, u
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("content not found")
 		}
-		log.Printf("[Err] Error getting content in ContentService.UpdateContent: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error getting content in ContentService.UpdateContent: %v", err)
 		return fmt.Errorf("failed to get content: %w", err)
 	}
 
-	// Validate sections
 	if err := s.validateSections(req.Sections); err != nil {
 		return err
 	}
 
-	// Update sections
 	sections := make([]model.ContentSection, len(req.Sections))
 	for i, sectionReq := range req.Sections {
 		sections[i] = model.ContentSection{
@@ -194,7 +189,7 @@ func (s *ContentService) UpdateContent(ctx context.Context, lessonSlug string, u
 	existingContent.UpdatedAt = time.Now()
 
 	if err := s.contentRepo.UpdateContent(ctx, existingContent); err != nil {
-		log.Printf("[Err] Error updating content in ContentService.UpdateContent: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error updating content in ContentService.UpdateContent: %v", err)
 		return fmt.Errorf("failed to update content: %w", err)
 	}
 
@@ -202,7 +197,6 @@ func (s *ContentService) UpdateContent(ctx context.Context, lessonSlug string, u
 }
 
 func (s *ContentService) DeleteContent(ctx context.Context, lessonSlug string, userId uint64) error {
-	// Validate ownership
 	lesson, err := s.validateOwnership(ctx, lessonSlug, userId)
 	if err != nil {
 		return err
@@ -210,7 +204,7 @@ func (s *ContentService) DeleteContent(ctx context.Context, lessonSlug string, u
 
 	exists, err := s.contentRepo.ContentExistsByLessonID(ctx, lesson.ID.Hex())
 	if err != nil {
-		log.Printf("[Err] Error checking content existence in ContentService.DeleteContent: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error checking content existence in ContentService.DeleteContent: %v", err)
 		return fmt.Errorf("failed to check content: %w", err)
 	}
 	if !exists {
@@ -218,7 +212,7 @@ func (s *ContentService) DeleteContent(ctx context.Context, lessonSlug string, u
 	}
 
 	if err := s.contentRepo.DeleteContentByLessonID(ctx, lesson.ID.Hex()); err != nil {
-		log.Printf("[Err] Error deleting content in ContentService.DeleteContent: %v", err)
+		logger.ErrorfWithCtx(ctx, "[Err] Error deleting content in ContentService.DeleteContent: %v", err)
 		return fmt.Errorf("failed to delete content: %w", err)
 	}
 

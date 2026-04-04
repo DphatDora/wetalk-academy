@@ -1,7 +1,8 @@
 package config
 
 import (
-	"log"
+	"fmt"
+	"os"
 	"strings"
 	"sync"
 
@@ -35,7 +36,8 @@ func LoadConfig() {
 		viper.AddConfigPath("./config")
 
 		if err := viper.ReadInConfig(); err != nil {
-			log.Fatalf("Config file error: %s", err)
+			fmt.Fprintf(os.Stderr, "Config file error: %v\n", err)
+			os.Exit(1)
 		}
 
 		// bind system environment variables
@@ -46,7 +48,8 @@ func LoadConfig() {
 
 		// load into struct
 		if err := viper.Unmarshal(&config); err != nil {
-			log.Fatalf("Config unmarshal error: %s", err)
+			fmt.Fprintf(os.Stderr, "Config unmarshal error: %v\n", err)
+			os.Exit(1)
 		}
 	})
 }
@@ -77,4 +80,11 @@ func bindEnvs() {
 
 	// Auth
 	_ = viper.BindEnv("auth.jwtSecret", "JWT_SECRET")
+
+	// Log
+	_ = viper.BindEnv("log.level", "LOG_LEVEL")
+	_ = viper.BindEnv("log.filePath", "LOG_FILE_PATH")
+	_ = viper.BindEnv("log.maxSizeMB", "LOG_MAX_SIZE_MB")
+	_ = viper.BindEnv("log.console", "LOG_CONSOLE")
+	_ = viper.BindEnv("log.dashboardToken", "LOG_DASHBOARD_TOKEN")
 }
