@@ -8,6 +8,7 @@ app:
   whitelist:
     - http://localhost:3000
     - http://localhost:5173
+    - https://wetalk-ute.vercel.app
 
 database:
   uri:
