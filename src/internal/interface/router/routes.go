@@ -24,7 +24,6 @@ type AppHandler struct {
 func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 	router := gin.Default()
 	router.Use(middleware.CORSMiddleware(conf.App.Whitelist))
-	router.Use(middleware.RequestMetricsMiddleware())
 
 	// repositories
 	topicRepo := repository.NewTopicRepository(mongoDB)
@@ -54,7 +53,8 @@ func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 
 	api := router.Group("/api/v1")
 	{
-		setupPublicRoutes(api, appHandler)
+		api.Use(middleware.RequestMetricsMiddleware())
+		setupPublicRoutes(api, conf, appHandler)
 		setupProtectedRoutes(api, conf, appHandler)
 	}
 
@@ -73,7 +73,9 @@ func SetupRoutes(mongoDB *mongo.Database, conf *config.Config) *gin.Engine {
 	return router
 }
 
-func setupPublicRoutes(rg *gin.RouterGroup, appHandler *AppHandler) {
+func setupPublicRoutes(rg *gin.RouterGroup, conf *config.Config, appHandler *AppHandler) {
+	rg.Use(middleware.OptionalAuthMiddleware(conf))
+
 	rg.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "OK"})
 	})
