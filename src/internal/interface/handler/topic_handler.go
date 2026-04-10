@@ -22,6 +22,19 @@ func NewTopicHandler(topicService *service.TopicService) *TopicHandler {
 	return &TopicHandler{topicService: topicService}
 }
 
+// CreateTopic
+// @Summary Create a new topic
+// @Description Create a new topic with title, description and author information. Requires authentication.
+// @Tags topics
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body request.CreateTopicRequest true "Create topic payload"
+// @Success 201 {object} response.APIResponse "Topic created successfully"
+// @Failure 400 {object} response.APIResponse "Invalid request format"
+// @Failure 401 {object} response.APIResponse "Unauthorized"
+// @Failure 500 {object} response.APIResponse "Failed to create topic"
+// @Router /api/v1/topics [post]
 func (h *TopicHandler) CreateTopic(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -62,6 +75,17 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
 	})
 }
 
+// GetTopics
+// @Summary Get list of topics
+// @Description Retrieve a paginated list of topics.
+// @Tags topics
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number" minimum(1)
+// @Param limit query int false "Items per page" minimum(1) maximum(100)
+// @Success 200 {object} response.APIResponse{data=[]response.TopicResponse} "Topics retrieved successfully"
+// @Failure 500 {object} response.APIResponse "Failed to get topics"
+// @Router /api/v1/topics [get]
 func (h *TopicHandler) GetTopics(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -99,6 +123,17 @@ func (h *TopicHandler) GetTopics(c *gin.Context) {
 	})
 }
 
+// GetTopicBySlug
+// @Summary Get topic by slug
+// @Description Retrieve a single topic by its slug.
+// @Tags topics
+// @Accept json
+// @Produce json
+// @Param slug path string true "Topic slug"
+// @Success 200 {object} response.APIResponse{data=response.TopicResponse} "Topic retrieved successfully"
+// @Failure 404 {object} response.APIResponse "Topic not found"
+// @Failure 500 {object} response.APIResponse "Failed to get topic"
+// @Router /api/v1/topics/{slug} [get]
 func (h *TopicHandler) GetTopicBySlug(c *gin.Context) {
 	ctx := c.Request.Context()
 	slug := c.Param("slug")
@@ -129,6 +164,22 @@ func (h *TopicHandler) GetTopicBySlug(c *gin.Context) {
 	})
 }
 
+// UpdateTopic
+// @Summary Update a topic
+// @Description Update an existing topic by slug. Requires authentication and ownership of the topic.
+// @Tags topics
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param slug path string true "Topic slug"
+// @Param request body request.UpdateTopicRequest true "Update topic payload"
+// @Success 200 {object} response.APIResponse "Topic updated successfully"
+// @Failure 400 {object} response.APIResponse "Invalid request format"
+// @Failure 401 {object} response.APIResponse "Unauthorized"
+// @Failure 403 {object} response.APIResponse "Forbidden - no permission to update this topic"
+// @Failure 404 {object} response.APIResponse "Topic not found"
+// @Failure 500 {object} response.APIResponse "Failed to update topic"
+// @Router /api/v1/topics/{slug} [put]
 func (h *TopicHandler) UpdateTopic(c *gin.Context) {
 	ctx := c.Request.Context()
 	slug := c.Param("slug")
@@ -185,6 +236,21 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
 	})
 }
 
+// DeleteTopic
+// @Summary Delete a topic
+// @Description Delete an existing topic by slug. Requires authentication and ownership of the topic. Topic cannot be deleted if it has existing lessons.
+// @Tags topics
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param slug path string true "Topic slug"
+// @Success 200 {object} response.APIResponse "Topic deleted successfully"
+// @Failure 401 {object} response.APIResponse "Unauthorized"
+// @Failure 403 {object} response.APIResponse "Forbidden - no permission to delete this topic"
+// @Failure 404 {object} response.APIResponse "Topic not found"
+// @Failure 409 {object} response.APIResponse "Cannot delete topic with existing lessons"
+// @Failure 500 {object} response.APIResponse "Failed to delete topic"
+// @Router /api/v1/topics/{slug} [delete]
 func (h *TopicHandler) DeleteTopic(c *gin.Context) {
 	ctx := c.Request.Context()
 	slug := c.Param("slug")
@@ -238,6 +304,19 @@ func (h *TopicHandler) DeleteTopic(c *gin.Context) {
 	})
 }
 
+// GetLessonsInTopic
+// @Summary Get lessons in topic
+// @Description Retrieve a paginated list of lessons belonging to a topic identified by slug.
+// @Tags topics
+// @Accept json
+// @Produce json
+// @Param slug path string true "Topic slug"
+// @Param page query int false "Page number" minimum(1)
+// @Param limit query int false "Items per page" minimum(1) maximum(100)
+// @Success 200 {object} response.APIResponse "Lessons retrieved successfully"
+// @Failure 404 {object} response.APIResponse "Topic not found"
+// @Failure 500 {object} response.APIResponse "Failed to get lessons"
+// @Router /api/v1/topics/{slug}/lessons [get]
 func (h *TopicHandler) GetLessonsInTopic(c *gin.Context) {
 	ctx := c.Request.Context()
 	slug := c.Param("slug")

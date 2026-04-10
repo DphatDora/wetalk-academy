@@ -5,10 +5,15 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	_ "wetalk-academy/docs"
 	"wetalk-academy/config"
 	"wetalk-academy/internal/infrastructure/db"
 	"wetalk-academy/internal/interface/router"
 	"wetalk-academy/package/logger"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 const (
@@ -37,6 +42,9 @@ func main() {
 
 	// set up routes
 	r := router.SetupRoutes(mongoDB.Database, &conf)
+
+	// swagger endpoint
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	port := conf.App.Port
 	if port == 0 {
