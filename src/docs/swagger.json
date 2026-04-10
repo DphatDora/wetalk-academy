@@ -4,6 +4,298 @@
         "contact": {}
     },
     "paths": {
+        "/api/v1/judge0/submit": {
+            "post": {
+                "description": "Submit code to be executed by Judge0 API.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "judge0"
+                ],
+                "summary": "Submit code for execution",
+                "parameters": [
+                    {
+                        "description": "Submit code payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SubmitCodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Code executed successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request format",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to submit code",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lessons": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new lesson under a topic. Requires authentication.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lessons"
+                ],
+                "summary": "Create a new lesson",
+                "parameters": [
+                    {
+                        "description": "Create lesson payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateLessonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Lesson created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request format",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - no permission to add lessons to this topic",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Topic not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create lesson",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lessons/{slug}": {
+            "get": {
+                "description": "Retrieve a lesson by its slug.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lessons"
+                ],
+                "summary": "Get lesson by slug",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lesson slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lesson retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Lesson not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get lesson",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing lesson by its slug. Requires authentication and ownership.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lessons"
+                ],
+                "summary": "Update an existing lesson",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lesson slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update lesson payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateLessonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lesson updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request format",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - no permission to update this lesson",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Lesson not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update lesson",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a lesson by its slug. Requires authentication and ownership.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lessons"
+                ],
+                "summary": "Delete a lesson",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lesson slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lesson deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - no permission to delete this lesson",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Lesson not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete lesson",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/lessons/{slug}/content": {
             "get": {
                 "description": "Retrieve lesson content using lesson slug.",
@@ -1035,6 +1327,26 @@
                 }
             }
         },
+        "request.CreateLessonRequest": {
+            "type": "object",
+            "required": [
+                "orderIndex",
+                "title",
+                "topicSlug"
+            ],
+            "properties": {
+                "orderIndex": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topicSlug": {
+                    "type": "string"
+                }
+            }
+        },
         "request.CreateQuizRequest": {
             "type": "object",
             "required": [
@@ -1110,6 +1422,27 @@
                 }
             }
         },
+        "request.SubmitCodeRequest": {
+            "type": "object",
+            "required": [
+                "languageID",
+                "sourceCode"
+            ],
+            "properties": {
+                "expectedOutput": {
+                    "type": "string"
+                },
+                "languageID": {
+                    "type": "integer"
+                },
+                "sourceCode": {
+                    "type": "string"
+                },
+                "stdin": {
+                    "type": "string"
+                }
+            }
+        },
         "request.SubmitQuizRequest": {
             "type": "object",
             "required": [
@@ -1145,6 +1478,22 @@
                     "items": {
                         "$ref": "#/definitions/request.ContentSectionRequest"
                     }
+                }
+            }
+        },
+        "request.UpdateLessonRequest": {
+            "type": "object",
+            "required": [
+                "orderIndex",
+                "title"
+            ],
+            "properties": {
+                "orderIndex": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },

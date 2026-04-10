@@ -31,6 +31,20 @@ definitions:
     required:
     - sections
     type: object
+  request.CreateLessonRequest:
+    properties:
+      orderIndex:
+        minimum: 1
+        type: integer
+      title:
+        type: string
+      topicSlug:
+        type: string
+    required:
+    - orderIndex
+    - title
+    - topicSlug
+    type: object
   request.CreateQuizRequest:
     properties:
       lessonSlug:
@@ -84,6 +98,20 @@ definitions:
     - point
     - question
     type: object
+  request.SubmitCodeRequest:
+    properties:
+      expectedOutput:
+        type: string
+      languageID:
+        type: integer
+      sourceCode:
+        type: string
+      stdin:
+        type: string
+    required:
+    - languageID
+    - sourceCode
+    type: object
   request.SubmitQuizRequest:
     properties:
       answers:
@@ -109,6 +137,17 @@ definitions:
         type: array
     required:
     - sections
+    type: object
+  request.UpdateLessonRequest:
+    properties:
+      orderIndex:
+        minimum: 1
+        type: integer
+      title:
+        type: string
+    required:
+    - orderIndex
+    - title
     type: object
   request.UpdateQuizRequest:
     properties:
@@ -185,6 +224,196 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/v1/judge0/submit:
+    post:
+      consumes:
+      - application/json
+      description: Submit code to be executed by Judge0 API.
+      parameters:
+      - description: Submit code payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.SubmitCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Code executed successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to submit code
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Submit code for execution
+      tags:
+      - judge0
+  /api/v1/lessons:
+    post:
+      consumes:
+      - application/json
+      description: Create a new lesson under a topic. Requires authentication.
+      parameters:
+      - description: Create lesson payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateLessonRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Lesson created successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to add lessons to this topic
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Topic not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to create lesson
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new lesson
+      tags:
+      - lessons
+  /api/v1/lessons/{slug}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a lesson by its slug. Requires authentication and ownership.
+      parameters:
+      - description: Lesson slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lesson deleted successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to delete this lesson
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Lesson not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to delete lesson
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a lesson
+      tags:
+      - lessons
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a lesson by its slug.
+      parameters:
+      - description: Lesson slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lesson retrieved successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Lesson not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to get lesson
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get lesson by slug
+      tags:
+      - lessons
+    put:
+      consumes:
+      - application/json
+      description: Update an existing lesson by its slug. Requires authentication
+        and ownership.
+      parameters:
+      - description: Lesson slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Update lesson payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateLessonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lesson updated successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to update this lesson
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Lesson not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to update lesson
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update an existing lesson
+      tags:
+      - lessons
   /api/v1/lessons/{slug}/content:
     delete:
       consumes:
