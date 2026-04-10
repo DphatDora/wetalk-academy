@@ -1,0 +1,830 @@
+definitions:
+  request.Author:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  request.ContentSectionRequest:
+    properties:
+      content:
+        type: string
+      language:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    required:
+    - type
+    type: object
+  request.CreateContentRequest:
+    properties:
+      sections:
+        items:
+          $ref: '#/definitions/request.ContentSectionRequest'
+        minItems: 1
+        type: array
+    required:
+    - sections
+    type: object
+  request.CreateQuizRequest:
+    properties:
+      lessonSlug:
+        type: string
+      questions:
+        items:
+          $ref: '#/definitions/request.QuizQuestionRequest'
+        minItems: 1
+        type: array
+      timeLimit:
+        minimum: 1
+        type: integer
+      title:
+        type: string
+    required:
+    - lessonSlug
+    - questions
+    - timeLimit
+    - title
+    type: object
+  request.CreateTopicRequest:
+    properties:
+      author:
+        $ref: '#/definitions/request.Author'
+      description:
+        type: string
+      title:
+        type: string
+    required:
+    - author
+    - description
+    - title
+    type: object
+  request.QuizQuestionRequest:
+    properties:
+      correctAnswer:
+        type: string
+      options:
+        items:
+          type: string
+        minItems: 2
+        type: array
+      point:
+        minimum: 1
+        type: integer
+      question:
+        type: string
+    required:
+    - correctAnswer
+    - options
+    - point
+    - question
+    type: object
+  request.SubmitQuizRequest:
+    properties:
+      answers:
+        items:
+          type: string
+        type: array
+      quizId:
+        type: string
+      totalTime:
+        minimum: 0
+        type: integer
+    required:
+    - answers
+    - quizId
+    - totalTime
+    type: object
+  request.UpdateContentRequest:
+    properties:
+      sections:
+        items:
+          $ref: '#/definitions/request.ContentSectionRequest'
+        minItems: 1
+        type: array
+    required:
+    - sections
+    type: object
+  request.UpdateQuizRequest:
+    properties:
+      questions:
+        items:
+          $ref: '#/definitions/request.QuizQuestionRequest'
+        minItems: 1
+        type: array
+      timeLimit:
+        minimum: 1
+        type: integer
+      title:
+        type: string
+    required:
+    - questions
+    - timeLimit
+    - title
+    type: object
+  request.UpdateTopicRequest:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  response.APIResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      pagination:
+        $ref: '#/definitions/response.Pagination'
+      success:
+        type: boolean
+    type: object
+  response.Pagination:
+    properties:
+      limit:
+        type: integer
+      nextUrl:
+        type: string
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  response.TopicAuthorResponse:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+      userId:
+        type: integer
+    type: object
+  response.TopicResponse:
+    properties:
+      author:
+        $ref: '#/definitions/response.TopicAuthorResponse'
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/lessons/{slug}/content:
+    delete:
+      consumes:
+      - application/json
+      description: Delete content of a lesson by lesson slug. Requires authentication
+        and lesson ownership.
+      parameters:
+      - description: Lesson slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Content deleted successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to delete content
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Lesson or content not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to delete content
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete lesson content
+      tags:
+      - contents
+    get:
+      consumes:
+      - application/json
+      description: Retrieve lesson content using lesson slug.
+      parameters:
+      - description: Lesson slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Content retrieved successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Lesson or content not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to get content
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get content by lesson slug
+      tags:
+      - contents
+    post:
+      consumes:
+      - application/json
+      description: Create lesson content by lesson slug. Requires authentication and
+        lesson ownership.
+      parameters:
+      - description: Lesson slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Create content payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateContentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Content created successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to add content
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Lesson not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "409":
+          description: Content already exists for this lesson
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to create content
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create content for a lesson
+      tags:
+      - contents
+    put:
+      consumes:
+      - application/json
+      description: Update content of a lesson by lesson slug. Requires authentication
+        and lesson ownership.
+      parameters:
+      - description: Lesson slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Update content payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateContentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Content updated successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to update content
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Lesson or content not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to update content
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update lesson content
+      tags:
+      - contents
+  /api/v1/lessons/{slug}/quiz:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all quizzes of a lesson by lesson slug.
+      parameters:
+      - description: Lesson slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quizzes retrieved successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Lesson not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to get quizzes
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get quizzes by lesson slug
+      tags:
+      - quizzes
+  /api/v1/quizzes:
+    post:
+      consumes:
+      - application/json
+      description: Create a new quiz for a lesson. Requires authentication and lesson
+        ownership.
+      parameters:
+      - description: Create quiz payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Quiz created successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to create quiz
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Lesson not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to create quiz
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a quiz
+      tags:
+      - quizzes
+  /api/v1/quizzes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete quiz by quiz ID. Requires authentication and quiz ownership.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quiz deleted successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to delete quiz
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to delete quiz
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a quiz
+      tags:
+      - quizzes
+    get:
+      consumes:
+      - application/json
+      description: Retrieve quiz detail by quiz ID.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quiz retrieved successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to get quiz
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get quiz by ID
+      tags:
+      - quizzes
+    put:
+      consumes:
+      - application/json
+      description: Update quiz detail by quiz ID. Requires authentication and quiz
+        ownership.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update quiz payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Quiz updated successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to update quiz
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to update quiz
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a quiz
+      tags:
+      - quizzes
+  /api/v1/quizzes/submit:
+    post:
+      consumes:
+      - application/json
+      description: Submit answers for a quiz and get the submission result. Requires
+        authentication.
+      parameters:
+      - description: Submit quiz payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.SubmitQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Quiz submitted successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Invalid request format or invalid quiz ID
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Quiz not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to submit quiz
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Submit quiz answers
+      tags:
+      - quizzes
+  /api/v1/topics:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a paginated list of topics.
+      parameters:
+      - description: Page number
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Topics retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/response.TopicResponse'
+                  type: array
+              type: object
+        "500":
+          description: Failed to get topics
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get list of topics
+      tags:
+      - topics
+    post:
+      consumes:
+      - application/json
+      description: Create a new topic with title, description and author information.
+        Requires authentication.
+      parameters:
+      - description: Create topic payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateTopicRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Topic created successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to create topic
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new topic
+      tags:
+      - topics
+  /api/v1/topics/{slug}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing topic by slug. Requires authentication and ownership
+        of the topic. Topic cannot be deleted if it has existing lessons.
+      parameters:
+      - description: Topic slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Topic deleted successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to delete this topic
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Topic not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "409":
+          description: Cannot delete topic with existing lessons
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to delete topic
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a topic
+      tags:
+      - topics
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single topic by its slug.
+      parameters:
+      - description: Topic slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Topic retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.TopicResponse'
+              type: object
+        "404":
+          description: Topic not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to get topic
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get topic by slug
+      tags:
+      - topics
+    put:
+      consumes:
+      - application/json
+      description: Update an existing topic by slug. Requires authentication and ownership
+        of the topic.
+      parameters:
+      - description: Topic slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Update topic payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateTopicRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Topic updated successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "403":
+          description: Forbidden - no permission to update this topic
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Topic not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to update topic
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a topic
+      tags:
+      - topics
+  /api/v1/topics/{slug}/lessons:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a paginated list of lessons belonging to a topic identified
+        by slug.
+      parameters:
+      - description: Topic slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lessons retrieved successfully
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Topic not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Failed to get lessons
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get lessons in topic
+      tags:
+      - topics
+swagger: "2.0"

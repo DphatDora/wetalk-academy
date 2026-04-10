@@ -20,6 +20,21 @@ func NewQuizHandler(quizService *service.QuizService) *QuizHandler {
 	return &QuizHandler{quizService: quizService}
 }
 
+// CreateQuiz
+// @Summary Create a quiz
+// @Description Create a new quiz for a lesson. Requires authentication and lesson ownership.
+// @Tags quizzes
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body request.CreateQuizRequest true "Create quiz payload"
+// @Success 201 {object} response.APIResponse "Quiz created successfully"
+// @Failure 400 {object} response.APIResponse "Invalid request format"
+// @Failure 401 {object} response.APIResponse "Unauthorized"
+// @Failure 403 {object} response.APIResponse "Forbidden - no permission to create quiz"
+// @Failure 404 {object} response.APIResponse "Lesson not found"
+// @Failure 500 {object} response.APIResponse "Failed to create quiz"
+// @Router /api/v1/quizzes [post]
 func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -74,6 +89,17 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 	})
 }
 
+// GetQuizByID
+// @Summary Get quiz by ID
+// @Description Retrieve quiz detail by quiz ID.
+// @Tags quizzes
+// @Accept json
+// @Produce json
+// @Param id path string true "Quiz ID"
+// @Success 200 {object} response.APIResponse "Quiz retrieved successfully"
+// @Failure 404 {object} response.APIResponse "Quiz not found"
+// @Failure 500 {object} response.APIResponse "Failed to get quiz"
+// @Router /api/v1/quizzes/{id} [get]
 func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 	ctx := c.Request.Context()
 	quizID := c.Param("id")
@@ -104,6 +130,17 @@ func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 	})
 }
 
+// GetQuizzesByLessonSlug
+// @Summary Get quizzes by lesson slug
+// @Description Retrieve all quizzes of a lesson by lesson slug.
+// @Tags quizzes
+// @Accept json
+// @Produce json
+// @Param slug path string true "Lesson slug"
+// @Success 200 {object} response.APIResponse "Quizzes retrieved successfully"
+// @Failure 404 {object} response.APIResponse "Lesson not found"
+// @Failure 500 {object} response.APIResponse "Failed to get quizzes"
+// @Router /api/v1/lessons/{slug}/quiz [get]
 func (h *QuizHandler) GetQuizzesByLessonSlug(c *gin.Context) {
 	ctx := c.Request.Context()
 	lessonSlug := c.Param("slug")
@@ -134,6 +171,22 @@ func (h *QuizHandler) GetQuizzesByLessonSlug(c *gin.Context) {
 	})
 }
 
+// UpdateQuiz
+// @Summary Update a quiz
+// @Description Update quiz detail by quiz ID. Requires authentication and quiz ownership.
+// @Tags quizzes
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Quiz ID"
+// @Param request body request.UpdateQuizRequest true "Update quiz payload"
+// @Success 200 {object} response.APIResponse "Quiz updated successfully"
+// @Failure 400 {object} response.APIResponse "Invalid request format"
+// @Failure 401 {object} response.APIResponse "Unauthorized"
+// @Failure 403 {object} response.APIResponse "Forbidden - no permission to update quiz"
+// @Failure 404 {object} response.APIResponse "Quiz not found"
+// @Failure 500 {object} response.APIResponse "Failed to update quiz"
+// @Router /api/v1/quizzes/{id} [put]
 func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 	ctx := c.Request.Context()
 	quizID := c.Param("id")
@@ -189,6 +242,20 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 	})
 }
 
+// DeleteQuiz
+// @Summary Delete a quiz
+// @Description Delete quiz by quiz ID. Requires authentication and quiz ownership.
+// @Tags quizzes
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Quiz ID"
+// @Success 200 {object} response.APIResponse "Quiz deleted successfully"
+// @Failure 401 {object} response.APIResponse "Unauthorized"
+// @Failure 403 {object} response.APIResponse "Forbidden - no permission to delete quiz"
+// @Failure 404 {object} response.APIResponse "Quiz not found"
+// @Failure 500 {object} response.APIResponse "Failed to delete quiz"
+// @Router /api/v1/quizzes/{id} [delete]
 func (h *QuizHandler) DeleteQuiz(c *gin.Context) {
 	ctx := c.Request.Context()
 	quizID := c.Param("id")
@@ -234,6 +301,20 @@ func (h *QuizHandler) DeleteQuiz(c *gin.Context) {
 	})
 }
 
+// SubmitQuiz
+// @Summary Submit quiz answers
+// @Description Submit answers for a quiz and get the submission result. Requires authentication.
+// @Tags quizzes
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body request.SubmitQuizRequest true "Submit quiz payload"
+// @Success 201 {object} response.APIResponse "Quiz submitted successfully"
+// @Failure 400 {object} response.APIResponse "Invalid request format or invalid quiz ID"
+// @Failure 401 {object} response.APIResponse "Unauthorized"
+// @Failure 404 {object} response.APIResponse "Quiz not found"
+// @Failure 500 {object} response.APIResponse "Failed to submit quiz"
+// @Router /api/v1/quizzes/submit [post]
 func (h *QuizHandler) SubmitQuiz(c *gin.Context) {
 	ctx := c.Request.Context()
 
