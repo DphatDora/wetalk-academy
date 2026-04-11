@@ -2,3 +2,5 @@
 /src/main
 /src/.env
 /src/logs
+
+deploy.sh
