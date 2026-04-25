@@ -6,10 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	_ "wetalk-academy/docs"
 	"wetalk-academy/config"
+	_ "wetalk-academy/docs"
 	"wetalk-academy/internal/infrastructure/db"
 	"wetalk-academy/internal/interface/router"
+	"wetalk-academy/internal/wire"
 	"wetalk-academy/package/logger"
 
 	swaggerFiles "github.com/swaggo/files"
@@ -40,8 +41,11 @@ func main() {
 		}
 	}()
 
+	// wire-generated DI container
+	appHandler := wire.InitAppContainer(mongoDB.Database, &conf)
+
 	// set up routes
-	r := router.SetupRoutes(mongoDB.Database, &conf)
+	r := router.SetupRoutes(appHandler, &conf)
 
 	// swagger endpoint
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
