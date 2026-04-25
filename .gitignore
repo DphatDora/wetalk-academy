@@ -2,5 +2,6 @@
 /src/main
 /src/.env
 /src/logs
+/src/internal/wire/wire_gen.go
 
 deploy.sh
