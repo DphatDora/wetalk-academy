@@ -77,6 +77,8 @@ func bindEnvs() {
 
 	// Judge0
 	_ = viper.BindEnv("judge0.baseURL", "JUDGE0_BASE_URL")
+	_ = viper.BindEnv("judge0.apiKey", "JUDGE0_API_KEY")
+	_ = viper.BindEnv("judge0.apiHost", "JUDGE0_API_HOST")
 
 	// Auth
 	_ = viper.BindEnv("auth.jwtSecret", "JWT_SECRET")

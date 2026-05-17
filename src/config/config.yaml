@@ -30,6 +30,8 @@ client:
 
 judge0:
   baseURL:
+  apiKey:
+  apiHost:
 
 auth:
   jwtSecret:

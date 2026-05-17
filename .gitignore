@@ -3,5 +3,5 @@
 /src/.env
 /src/logs
 /src/internal/wire/wire_gen.go
-
+academy-service
 deploy.sh

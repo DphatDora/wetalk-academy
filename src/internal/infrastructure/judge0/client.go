@@ -34,12 +34,16 @@ type StatusResponse struct {
 
 type Client struct {
 	baseURL string
+	apiKey  string
+	apiHost string
 	http    *http.Client
 }
 
 func NewClient(conf *config.Config) *Client {
 	return &Client{
 		baseURL: conf.Judge0.BaseURL,
+		apiKey:  conf.Judge0.APIKey,
+		apiHost: conf.Judge0.APIHost,
 		http: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -60,6 +64,12 @@ func (c *Client) Submit(ctx context.Context, req *SubmissionRequest) (*StatusRes
 		return nil, fmt.Errorf("failed to create request")
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
+	if c.apiKey != "" {
+		httpReq.Header.Set("x-rapidapi-key", c.apiKey)
+	}
+	if c.apiHost != "" {
+		httpReq.Header.Set("x-rapidapi-host", c.apiHost)
+	}
 
 	resp, err := c.http.Do(httpReq)
 	if err != nil {
